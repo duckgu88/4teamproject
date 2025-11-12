@@ -3,8 +3,8 @@ package search;
 import java.util.ArrayList;
 import java.util.Scanner;
 import main.DeliveryOrder;
-import main.Sender;
 import main.Receiver;
+import main.Sender;
 import mgr.Manager;
 
 public class SearchSystem {
@@ -24,6 +24,7 @@ public class SearchSystem {
         System.out.println("1. 보내는 사람으로 조회");
         System.out.println("2. 받는 사람으로 조회");
         System.out.println("3. 송장번호로 조회");
+        System.out.println("4. 지역별로 조회");
         System.out.print(">> ");
         int choice = scan.nextInt();
 
@@ -38,10 +39,14 @@ public class SearchSystem {
             case 3:
                 searcher = new InvoiceSearcher();
                 break;
+            case 4:
+                searcher = new RegionSearcher();
+                break;
             default:
                 System.out.println("잘못된 선택입니다.");
                 return;
         }
-        SearchHelper.search(searcher, dList, scan);
+        
+        SearchPresenter.search(searcher, dList, scan);
     }
 }
