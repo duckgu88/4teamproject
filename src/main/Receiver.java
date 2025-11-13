@@ -19,4 +19,12 @@ public class Receiver implements Manageable {
 	public void print() {
 		System.out.printf("받는 사람: %s (%s, %s)\n", name, phone, address);
 	}
+
+	public String getName() {
+		return name;
+	}
+
+	public String getAddress() {
+		return address;
+	}
 }

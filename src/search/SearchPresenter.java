@@ -21,6 +21,5 @@ public class SearchPresenter {
                 order.print();
             }
         }
-        System.out.println("=======================================");
     }
 }

@@ -24,4 +24,16 @@ public class DeliveryOrder {
 		receiver.print();
 		System.out.println();
 	}
+
+	public int getInvoiceNumber() {
+		return invoiceNumber;
+	}
+
+	public Sender getSender() {
+		return sender;
+	}
+
+	public Receiver getReceiver() {
+		return receiver;
+	}
 }

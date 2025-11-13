@@ -13,13 +13,31 @@ public class DeliverySystem {
 	void mymain() {
 		senderMgr.readAll("senders.txt", new SenderFactory());	
 		receiverMgr.readAll("receivers.txt", new ReceiverFactory());
+		SearchSystem searchSystem = new SearchSystem(senderMgr, receiverMgr, Dlist);
 		
 		createDeliveryOrder();
-		printAllDeliveryOrder();
+	
+		while (true) {
+            System.out.println("\n[메인 메뉴]");
+            System.out.println("1. 전체 배송 주문 출력");
+            System.out.println("2. 조회");
+            System.out.println("종료하시려면 'end'를 입력하세요.");
+            System.out.print(">> ");
 
-		// 정보 조회를 위한 탐색 시스템 시작
-		SearchSystem searchSystem = new SearchSystem(senderMgr, receiverMgr, Dlist);
-		searchSystem.searchMenu();
+            String choice = scan.next();
+            scan.nextLine(); 
+
+            if (choice.equals("1")) {
+                printAllDeliveryOrder();
+            } else if (choice.equals("2")) {
+                searchSystem.searchMenu();
+            } else if (choice.equalsIgnoreCase("end")) {
+                System.out.println("프로그램을 종료합니다.");
+                return;
+            } else {
+                System.out.println("잘못된 입력입니다. 다시 선택해주세요.");
+            }
+        }
 	}
 	
 	Scanner openFile(String filename) {

@@ -25,4 +25,12 @@ public class Sender implements Manageable {
 	public void print() {
 		System.out.printf("보내는 사람: %s (%s, %s, %s, %s, %s)\n", name, phone, address, company, weight, item);
 	}
+
+	public String getName() {
+		return name;
+	}
+
+	public String getAddress() {
+		return address;
+	}
 }
