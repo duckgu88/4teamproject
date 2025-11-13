@@ -3,7 +3,6 @@ package main;
 import java.util.*;
 import java.io.*;
 import mgr.*;
-import search.SearchSystem;
 
 public class DeliverySystem {
 	Scanner scan = new Scanner(System.in);
@@ -16,10 +15,6 @@ public class DeliverySystem {
 		
 		createDeliveryOrder();
 		printAllDeliveryOrder();
-
-		// 정보 조회를 위한 탐색 시스템 시작
-		SearchSystem searchSystem = new SearchSystem(senderMgr, receiverMgr, Dlist);
-		searchSystem.searchMenu();
 	}
 	
 	Scanner openFile(String filename) {
