@@ -4,12 +4,12 @@ import java.util.Scanner;
 import mgr.Manageable;
 
 public class Sender implements Manageable {
-	String name;
-	String phone;
-	String address;
-	String company;
-	String weight;
-	String item;
+	private String name;
+	private String phone;
+	private String address;
+	private String company;
+	private String weight;
+	private String item;
 
 	@Override
 	public void read(Scanner scan) {
@@ -24,5 +24,29 @@ public class Sender implements Manageable {
 	@Override
 	public void print() {
 		System.out.printf("보내는 사람: %s (%s, %s, %s, %s, %s)\n", name, phone, address, company, weight, item);
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public String getPhone() {
+		return phone;
+	}
+
+	public String getAddress() {
+		return address;
+	}
+
+	public String getCompany() {
+		return company;
+	}
+
+	public String getWeight() {
+		return weight;
+	}
+
+	public String getItem() {
+		return item;
 	}
 }

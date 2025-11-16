@@ -4,10 +4,10 @@ import java.util.Scanner;
 import mgr.Manageable;
 
 public class Receiver implements Manageable {
-	String name;
-	String phone;
-	String address;
-	String request;
+	private String name;
+	private String phone;
+	private String address;
+	private String request;
 
 	@Override
 	public void read(Scanner scan) {
@@ -23,7 +23,23 @@ public class Receiver implements Manageable {
             System.out.println("요청사항: " + request);
 	}
 
-	public String getAdderss() {
+	public String getName() {
+		return name;
+	}
+
+	public String getPhone() {
+		return phone;
+	}
+
+	public String getAddress() {
 		return address;
+	}
+
+	public String getRequest() {
+		return request;
+	}
+
+	public void setRequest(String request) {
+		this.request = request;
 	}
 }

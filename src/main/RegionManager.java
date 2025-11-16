@@ -9,7 +9,7 @@ public class RegionManager {
 
     public void groupRegion(ArrayList<DeliveryOrder> Dlist) {
         for (DeliveryOrder d : Dlist) {
-            String[] Address = d.receiver.getAdderss().split(" ");
+            String[] Address = d.getReceiver().getAddress().split(" ");
             String region = Address[0];
 
             RegionGroup group = findRegionGroup(region);

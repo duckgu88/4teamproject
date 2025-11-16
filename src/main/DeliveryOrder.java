@@ -3,9 +3,9 @@ package main;
 import java.util.Random;
 
 public class DeliveryOrder {
-	public Sender sender;
-	public Receiver receiver;
-	public int invoiceNumber;
+	private Sender sender;
+	private Receiver receiver;
+	private int invoiceNumber;
 
 	public DeliveryOrder(Sender s, Receiver r) {
 		this.sender = s;
@@ -23,5 +23,17 @@ public class DeliveryOrder {
 		sender.print();
 		receiver.print();
 		System.out.println();
+	}
+
+	public Sender getSender() {
+		return sender;
+	}
+
+	public Receiver getReceiver() {
+		return receiver;
+	}
+
+	public int getInvoiceNumber() {
+		return invoiceNumber;
 	}
 }
