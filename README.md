@@ -25,24 +25,24 @@
 
 ### 패키지별 상세 역할
 
-#### 1 main 패키지 (중앙 허브)
+#### 1. main 패키지 (중앙 허브)
 - **역할**: 핵심 데이터 클래스(DeliveryOrder 등)와 이를 총괄하는 싱글톤 DeliverySystem 포함
 - **상호작용**:
     - mgr 의존: DeliverySystem이 mgr.Manager를 사용해 객체 생성, 대상 클래스는 mgr.Manageable 인터페이스 구현
     - 데이터 제공: getter 메소드를 통해 UI 표시 및 검색에 필요한 데이터를 외부에 제공
 
-#### 2 mgr 패키지 (데이터 로더)
+#### 2. mgr 패키지 (데이터 로더)
 - **역할**: 파일 데이터를 객체로 변환하는 재사용 가능한 로딩 프레임워크
 - **상호작용**:
     - main.DeliverySystem의 Manager.readAll 호출 시, Factory를 통해 Manageable 구현체를 생성하고 파일 내용 주입
 
-#### 3 guitool 패키지 (사용자 인터페이스)
+#### 3. guitool 패키지 (사용자 인터페이스)
 - **역할**: Swing 기반의 모든 GUI 화면 생성 및 관리
 - **상호작용**:
     - main 의존: DeliverySystem의 데이터 목록(Dlist)을 JTable에 채우고, 메소드를 호출해 데이터 상태 변경
     - search 의존: 검색 시 search.Searchable 구현체를 생성하고 Matcher.findMatches를 호출해 결과 획득
 
-#### 4 search 패키지 (검색 로직)
+#### 4. search 패키지 (검색 로직)
 - **역할**: 다양한 검색 기준을 Searchable 인터페이스와 구현체로 정의
 - **상호작용**:
     - main 의존: 모든 Searchable 구현체는 DeliveryOrder 객체를 받아 getter로 데이터에 접근, 검색 조건 일치 여부 확인
