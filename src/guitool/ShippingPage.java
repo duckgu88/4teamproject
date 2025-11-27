@@ -54,6 +54,7 @@ public class ShippingPage extends JFrame {
     private JButton btnFilterInProgress;
     private JButton btnFilterPending;
     private JButton advanceDayButton;
+    private JButton btnGoToInquiry; // '주문 관리'로 가는 버튼 추가
 
     // 날짜 표시용 라벨 (배송 상태 순 버튼 자리를 대체)
     private JLabel dateLabel;
@@ -138,10 +139,15 @@ public class ShippingPage extends JFrame {
 
         buttonPanel.add(leftButtonsPanel, BorderLayout.WEST); // 왼쪽 버튼 패널을 서쪽에 추가
 
-        advanceDayButton = createStyledButton("날짜 갱신");  // ← 텍스트 변경
         JPanel rightButtonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         rightButtonPanel.setBackground(COLOR_BACKGROUND);
+        
+        btnGoToInquiry = createStyledButton("주문 관리");
+        rightButtonPanel.add(btnGoToInquiry);
+
+        advanceDayButton = createStyledButton("날짜 갱신");  // ← 텍스트 변경
         rightButtonPanel.add(advanceDayButton);
+        
         buttonPanel.add(rightButtonPanel, BorderLayout.EAST);
 
         cardLayout = new CardLayout();
@@ -399,6 +405,12 @@ public class ShippingPage extends JFrame {
             updateRegionSummaryTable();
             cardLayout.show(cardPanel, "SUMMARY");
             currentActiveCard = "SUMMARY";
+        });
+
+        // '주문 관리' 페이지로 이동
+        btnGoToInquiry.addActionListener(e -> {
+            new InquiryPage(parentFrame);
+            dispose();
         });
 
         // 뒤로가기 버튼 리스너

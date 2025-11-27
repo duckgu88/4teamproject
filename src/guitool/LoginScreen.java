@@ -94,8 +94,8 @@ public class LoginScreen extends JFrame {
                 String password = new String(pwText.getPassword());
 
                 if (id.equals("manager") && password.equals("qwer1234")) {
-                    new MainMenu();
-                    dispose();
+                    new ShippingPage(LoginScreen.this); // ShippingPage를 직접 열도록 수정
+                    setVisible(false); // 현재 창을 닫는 대신 숨김
                 } else {
                     JOptionPane.showMessageDialog(null, "아이디 또는 비밀번호가 틀렸습니다.", "로그인 실패", JOptionPane.ERROR_MESSAGE);
                 }

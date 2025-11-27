@@ -87,9 +87,9 @@ public class DeliverySystem {
         ArrayList<String> requests = readRequests();
         addRequests(requests, rm);
         System.out.println("=== 모든 주문 정보 ===");
-        for (DeliveryOrder order : Dlist) {
-            System.out.println(order.getInfoString());
-        }
+        // for (DeliveryOrder order : Dlist) {
+        //     System.out.println(order.getInfoString());
+        // }
         System.out.println("데이터 로딩 완료."); // 로딩 확인용
     }
 

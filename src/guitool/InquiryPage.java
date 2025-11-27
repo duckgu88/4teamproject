@@ -44,22 +44,25 @@ public class InquiryPage extends JFrame {
     }
 
     private void setupUI() {
-        // ================= 상단 : 뒤로가기 + 카테고리 버튼 =================
-        JPanel topControlPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
-        topControlPanel.setBackground(COLOR_BACKGROUND);
+        // ================= 상단 패널 레이아웃 변경 (한 줄, 간격/크기 조절) =================
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setBackground(COLOR_BACKGROUND);
+        topPanel.setBorder(BorderFactory.createEmptyBorder(10, 5, 5, 5));
 
-        Dimension buttonSize = new Dimension(110, 30); // 버튼 크기 통일
+        // --- 왼쪽: 뒤로가기 + 카테고리 버튼 ---
+        JPanel topLeftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0)); // 간격 10->5
+        topLeftPanel.setBackground(COLOR_BACKGROUND);
 
-        // 뒤로가기 버튼
+        Dimension buttonSize = new Dimension(100, 30); // 너비 110->100
+
         JButton backButton = createStyledButton("뒤로가기");
         backButton.setPreferredSize(buttonSize);
         backButton.addActionListener(e -> {
             parentFrame.setVisible(true);
             dispose();
         });
-        topControlPanel.add(backButton);
+        topLeftPanel.add(backButton);
 
-        // 카테고리 버튼들
         String[] categories = {"보내는 사람", "받는 사람", "송장번호", "지역", "전화번호", "물품명"};
         for (String cat : categories) {
             JButton btn = createStyledButton(cat);
@@ -68,10 +71,26 @@ public class InquiryPage extends JFrame {
                 setActiveButton(btn);
                 openSubInquiryWindow(cat);
             });
-            topControlPanel.add(btn);
+            topLeftPanel.add(btn);
         }
+        
+        topPanel.add(topLeftPanel, BorderLayout.WEST);
 
-        add(topControlPanel, BorderLayout.NORTH);
+        // --- 오른쪽: '배송 관리' 버튼 추가 ---
+        JPanel topRightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        topRightPanel.setBackground(COLOR_BACKGROUND);
+
+        JButton btnGoToShipping = createStyledButton("배송 관리");
+        btnGoToShipping.setPreferredSize(buttonSize);
+        btnGoToShipping.addActionListener(e -> {
+            new ShippingPage(parentFrame);
+            dispose();
+        });
+        topRightPanel.add(btnGoToShipping);
+        
+        topPanel.add(topRightPanel, BorderLayout.EAST);
+
+        add(topPanel, BorderLayout.NORTH);
 
         // ================= 중앙 : 결과 테이블 =================
         JScrollPane scrollPane = createTablePanel();
