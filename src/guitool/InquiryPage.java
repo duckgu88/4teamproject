@@ -22,6 +22,7 @@ public class InquiryPage extends JFrame {
     private JFrame parentFrame;
     private JButton advanceDayButton;
     private JLabel dateLabel; // 현재 날짜 표시용 라벨
+    private InquiryPresenter presenter; // 프레젠터 필드 추가
 
     // 현재 조회된 리스트를 저장 (수정/삭제 시 인덱스 매핑용)
     private ArrayList<DeliveryOrder> currentDisplayedList = new ArrayList<>();
@@ -33,6 +34,8 @@ public class InquiryPage extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
         getContentPane().setBackground(UITheme.COLOR_BACKGROUND);
+
+        this.presenter = new InquiryPresenter(this); // 프레젠터 초기화
 
         setupUI();
         setVisible(true);
@@ -136,7 +139,7 @@ public class InquiryPage extends JFrame {
             DeliverySystem.getInstance().updateDeliveryStatuses();
 
             updateDateLabel();     // 라벨 갱신
-            refreshTable(false);   // 메시지 없이 테이블만 갱신
+            updateTable(currentDisplayedList, false);   // 메시지 없이 테이블만 갱신
 
             JOptionPane.showMessageDialog(this,
                     "현재 날짜: " + DeliverySystem.getCurrentDate().toString()
@@ -152,7 +155,7 @@ public class InquiryPage extends JFrame {
     }
 
     private JScrollPane createTablePanel() {
-        String[] columnNames = {"송장번호", "보내는 사람", "받는 사람", "주소", "요청사항", "배송 상태"};
+        String[] columnNames = {"송장번호", "보내는 사람", "연락처", "물품명", "받는 사람", "주소", "요청사항", "배송 상태"};
         tableModel = new DefaultTableModel(columnNames, 0);
 
         resultTable = new JTable(tableModel) {
@@ -205,12 +208,20 @@ public class InquiryPage extends JFrame {
 
         String newAddr = JOptionPane.showInputDialog(this, "새로운 주소를 입력하세요:", currentAddr);
 
-        if (newAddr != null && !newAddr.trim().isEmpty()) {
-            // order.getReceiver().setAddress(newAddr);  // Receiver에 setter 있다면 사용
+        presenter.editOrderAddress(order, newAddr);
+    }
 
-            JOptionPane.showMessageDialog(this, "주소가 수정되었습니다. (DB 반영 완료)");
-            tableModel.setValueAt(newAddr, row, 3); // 3번 컬럼이 주소
+    /**
+     * Presenter로부터 주소 수정 성공 콜백을 받습니다.
+     * @param editedOrder 수정된 주문
+     * @param newAddress 새로운 주소
+     */
+    public void onEditAddressSuccess(DeliveryOrder editedOrder, String newAddress) {
+        int rowIndex = currentDisplayedList.indexOf(editedOrder);
+        if (rowIndex != -1) {
+            tableModel.setValueAt(newAddress, rowIndex, 3); // 3번 컬럼이 주소
         }
+        JOptionPane.showMessageDialog(this, "주소가 수정되었습니다.");
     }
 
     private void deleteSelectedOrder() {
@@ -224,13 +235,28 @@ public class InquiryPage extends JFrame {
                 "삭제 확인", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
             DeliveryOrder orderToRemove = currentDisplayedList.get(row);
-
-            DeliverySystem.getInstance().Dlist.remove(orderToRemove);
-            currentDisplayedList.remove(row);
-            tableModel.removeRow(row);
-
-            JOptionPane.showMessageDialog(this, "삭제되었습니다.");
+            presenter.deleteOrder(orderToRemove);
         }
+    }
+
+    /**
+     * Presenter로부터 주문 삭제 성공 콜백을 받습니다.
+     * @param deletedOrder 삭제된 주문
+     */
+    public void onOrderDeletionSuccess(DeliveryOrder deletedOrder) {
+        int indexToRemove = currentDisplayedList.indexOf(deletedOrder);
+        if (indexToRemove != -1) {
+            currentDisplayedList.remove(indexToRemove);
+            tableModel.removeRow(indexToRemove);
+        }
+        JOptionPane.showMessageDialog(this, "삭제되었습니다.");
+    }
+
+    /**
+     * Presenter로부터 주문 삭제 실패 콜백을 받습니다.
+     */
+    public void onOrderDeletionFailure() {
+        JOptionPane.showMessageDialog(this, "주문 삭제에 실패했습니다.", "오류", JOptionPane.ERROR_MESSAGE);
     }
 
     private void openSubInquiryWindow(String category) {
@@ -239,9 +265,7 @@ public class InquiryPage extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String keyword = subPanel.getInputText();
-                if (keyword == null || keyword.isEmpty()) return;
-
-                performSearch(category, keyword);
+                presenter.performSearch(category, keyword); // Call presenter
                 SwingUtilities.getWindowAncestor(subPanel).dispose();
             }
         });
@@ -253,57 +277,27 @@ public class InquiryPage extends JFrame {
         subFrame.setVisible(true);
     }
 
-    private void performSearch(String category, String keyword) {
-        Searchable searcher = null;
-        switch (category) {
-            case "보내는 사람":
-                searcher = new SenderSearcher();
-                break;
-            case "받는 사람":
-                searcher = new ReceiverSearcher();
-                break;
-            case "송장번호":
-                searcher = new InvoiceSearcher();
-                break;
-            case "지역":
-                searcher = new RegionSearcher();
-                break;
-            case "전화번호":
-                searcher = new PhoneSearcher();
-                break;
-            case "물품명":
-                searcher = new ItemSearcher();
-                break;
-            default:
-                return;
-        }
-
-        ArrayList<DeliveryOrder> allList = DeliverySystem.getInstance().Dlist;
-        currentDisplayedList = Matcher.findMatches(searcher, allList, keyword);
-
-        refreshTable(); // 검색 시에는 메시지 표시 가능
-    }
-
-    // 검색용 기본 버전 (경고 메시지 표시)
-    private void refreshTable() {
-        refreshTable(true);
-    }
-
-    // showMessage=false면 "검색 결과가 없습니다." 메시지 안 띄움
-    private void refreshTable(boolean showMessage) {
+    /**
+     * Presenter로부터 받은 검색 결과로 테이블을 업데이트합니다.
+     * @param orders 표시할 주문 목록
+     */
+    public void updateTable(ArrayList<DeliveryOrder> orders, boolean showMessage) {
+        currentDisplayedList = orders;
         tableModel.setRowCount(0);
 
-        if (currentDisplayedList.isEmpty()) {
+        if (orders.isEmpty()) {
             if (showMessage) {
                 JOptionPane.showMessageDialog(this, "검색 결과가 없습니다.");
             }
             return;
         }
 
-        for (DeliveryOrder o : currentDisplayedList) {
+        for (DeliveryOrder o : orders) {
             tableModel.addRow(new Object[]{
                     o.getInvoiceNumber(),
                     o.getSender().getName(),
+                    o.getSender().getPhone(),
+                    o.getSender().getItem(),
                     o.getReceiver().getName(),
                     o.getReceiver().getAddress(),
                     o.getReceiver().getRequest(),

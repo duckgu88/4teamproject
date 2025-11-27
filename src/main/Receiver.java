@@ -135,8 +135,7 @@ public class Receiver implements Manageable {
         }
     }
 
-    public void setAddress(String trim) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setAddress'");
+    public void setAddress(String address) {
+        this.address = address;
     }
 }
