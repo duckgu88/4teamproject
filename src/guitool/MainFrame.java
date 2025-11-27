@@ -12,6 +12,7 @@ public class MainFrame extends JFrame {
         setSize(1000, 700);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
+        setMinimumSize(new Dimension(1300, 600)); // 최소 창 크기 설정
 
         cardLayout = new CardLayout();
         cardPanel = new JPanel(cardLayout);

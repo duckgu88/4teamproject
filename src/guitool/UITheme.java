@@ -3,6 +3,8 @@ package guitool;
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -28,7 +30,7 @@ public final class UITheme {
     public static final Font FONT_LABEL = new Font("SansSerif", Font.PLAIN, 12);
     public static final Font FONT_BUTTON_GUEST = new Font("SansSerif", Font.PLAIN, 13); // GuestLogin의 FONT_BUTTON
     public static final Font FONT_LABEL_GUEST = new Font("SansSerif", Font.PLAIN, 12); // GuestLogin의 FONT_LABEL
-    public static final Font FONT_TABLE_HEADER = new Font("SansSerif", Font.BOLD, 13); // ShippingPage, InquiryPage 테이블 헤더용
+    public static final Font FONT_TABLE_HEADER = new Font("SansSerif", Font.BOLD, 12); // ShippingPage, InquiryPage 테이블 헤더용
 
     // --- 기타 UI 상수 ---
     public static final Border BUTTON_BORDER = new EmptyBorder(6, 12, 6, 12); // 기본 버튼 패딩
@@ -84,5 +86,48 @@ public final class UITheme {
         button.setPreferredSize(buttonDim);
         // GuestLogin의 버튼은 별도의 mouseEntered/Exited 로직이 없었으므로 여기서는 추가하지 않음
         return button;
+    }
+
+    /**
+     * 표준 스타일이 적용된 JTable을 생성하여 반환합니다.
+     * @param model 테이블에 적용할 데이터 모델
+     * @return 스타일이 적용된 JTable
+     */
+    public static JTable createStyledTable(DefaultTableModel model) {
+        JTable table = new JTable(model) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+
+            @Override
+            public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+                Component c = super.prepareRenderer(renderer, row, column);
+                if (!isRowSelected(row)) {
+                    c.setBackground(row % 2 == 0 ? UITheme.COLOR_BACKGROUND : UITheme.COLOR_ROW_ALT);
+                    c.setForeground(UITheme.COLOR_TEXT);
+                } else {
+                    c.setBackground(UITheme.COLOR_BUTTON_HOVER);
+                    c.setForeground(UITheme.COLOR_TEXT);
+                }
+                return c;
+            }
+        };
+
+        table.setFont(UITheme.FONT_LABEL);
+        table.setForeground(UITheme.COLOR_TEXT);
+        table.setGridColor(UITheme.COLOR_GRID);
+        table.setRowHeight(25); // 높이 25로 통일
+        table.setSelectionBackground(UITheme.COLOR_BUTTON_HOVER);
+        table.setSelectionForeground(UITheme.COLOR_TEXT);
+        table.setBackground(UITheme.COLOR_BACKGROUND);
+
+        javax.swing.table.JTableHeader header = table.getTableHeader();
+        header.setBackground(UITheme.COLOR_TABLE_HEADER);
+        header.setForeground(UITheme.COLOR_TEXT);
+        header.setFont(UITheme.FONT_TABLE_HEADER);
+        header.setPreferredSize(new Dimension(100, 30));
+
+        return table;
     }
 }

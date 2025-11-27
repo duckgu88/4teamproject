@@ -42,11 +42,11 @@ public class ShippingPage extends JPanel {
     private JButton btnGroupByRegion;
     private JButton btnFilterRequests;
     private JButton backButton; // 뒤로가기 버튼
-    private JButton btnFilterCompleted;
-    private JButton btnFilterInProgress;
-    private JButton btnFilterPending;
+    private JButton btnFilterStatus; // 통합된 상태 필터 버튼
     private JButton advanceDayButton;
     private JButton btnGoToInquiry; // '주문 관리'로 가는 버튼 추가
+
+    private int deliveryStatusFilterState = 0; // 0: 전체, 1: 배송 전, 2: 배송 중, 3: 배송 완료
 
     // 날짜 표시용 라벨 (배송 상태 순 버튼 자리를 대체)
     private JLabel dateLabel;
@@ -90,51 +90,54 @@ public class ShippingPage extends JPanel {
     }
 
     private void setupUI() {
-        JPanel buttonPanel = new JPanel(new BorderLayout());
+        // ================= 상단 패널 레이아웃 =================
+        JPanel buttonPanel = new JPanel(new BorderLayout(2, 0)); // BorderLayout 간격 2px
         buttonPanel.setBackground(UITheme.COLOR_BACKGROUND);
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 5, 5, 5));
 
-        JPanel leftButtonsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        leftButtonsPanel.setBackground(UITheme.COLOR_BACKGROUND);
-
+        // --- West: 네비게이션 버튼 ---
+        JPanel navButtonsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 0)); // FlowLayout 간격 2px
+        navButtonsPanel.setBackground(UITheme.COLOR_BACKGROUND);
         backButton = UITheme.createStyledButton("뒤로가기");
+        navButtonsPanel.add(backButton);
+        
+        buttonPanel.add(navButtonsPanel, BorderLayout.WEST);
+
+        // --- Center: 기능 버튼 ---
+        JPanel actionButtonsPanel = new JPanel(new GridLayout(1, 0, 2, 0)); // GridLayout 간격 2px
+        actionButtonsPanel.setBackground(UITheme.COLOR_BACKGROUND);
         btnShowAll = UITheme.createStyledButton("전체 보기");
         btnSortSender = UITheme.createStyledButton("보내는 사람 순");
-        btnSortReceiver = UITheme.createStyledButton("받는 사람 순");  // ← 텍스트 변경
+        btnSortReceiver = UITheme.createStyledButton("받는 사람 순");
         btnGroupByRegion = UITheme.createStyledButton("지역 별 요약");
         btnFilterRequests = UITheme.createStyledButton("요청사항 보기");
-        btnFilterCompleted = UITheme.createStyledButton("배송 완료");
-        btnFilterInProgress = UITheme.createStyledButton("배송 중");
-        btnFilterPending = UITheme.createStyledButton("배송 전");
+        btnFilterStatus = UITheme.createStyledButton("배송 상태: 전체"); // 통합된 상태 필터 버튼
 
-        leftButtonsPanel.add(backButton);
-        leftButtonsPanel.add(btnShowAll);
-        leftButtonsPanel.add(btnSortSender);
-        leftButtonsPanel.add(btnSortReceiver);
-        leftButtonsPanel.add(btnGroupByRegion);
-        leftButtonsPanel.add(btnFilterRequests);
-        leftButtonsPanel.add(btnFilterCompleted);
-        leftButtonsPanel.add(btnFilterInProgress);
-        leftButtonsPanel.add(btnFilterPending);
+        actionButtonsPanel.add(btnShowAll);
+        actionButtonsPanel.add(btnSortSender);
+        actionButtonsPanel.add(btnSortReceiver);
+        actionButtonsPanel.add(btnGroupByRegion);
+        actionButtonsPanel.add(btnFilterRequests);
+        actionButtonsPanel.add(btnFilterStatus);
 
-        // 배송 상태 순 버튼 대신 날짜 라벨 추가
+        buttonPanel.add(actionButtonsPanel, BorderLayout.CENTER);
+
+        // --- East: 시스템 버튼 및 페이지 전환 ---
+        JPanel systemButtonsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 2, 0)); // FlowLayout 간격 2px
+        systemButtonsPanel.setBackground(UITheme.COLOR_BACKGROUND);
+        
+        btnGoToInquiry = UITheme.createStyledButton("주문 관리");
+        systemButtonsPanel.add(btnGoToInquiry);
+
         dateLabel = new JLabel("현재 날짜: " + DeliverySystem.getCurrentDate().toString());
         dateLabel.setForeground(UITheme.COLOR_TEXT);
         dateLabel.setFont(UITheme.FONT_BUTTON);
-        leftButtonsPanel.add(dateLabel);
+        systemButtonsPanel.add(dateLabel);
 
-        buttonPanel.add(leftButtonsPanel, BorderLayout.WEST); // 왼쪽 버튼 패널을 서쪽에 추가
-
-        JPanel rightButtonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        rightButtonPanel.setBackground(UITheme.COLOR_BACKGROUND);
+        advanceDayButton = UITheme.createStyledButton("날짜 갱신");
+        systemButtonsPanel.add(advanceDayButton);
         
-        btnGoToInquiry = UITheme.createStyledButton("주문 관리");
-        rightButtonPanel.add(btnGoToInquiry);
-
-        advanceDayButton = UITheme.createStyledButton("날짜 갱신");  // ← 텍스트 변경
-        rightButtonPanel.add(advanceDayButton);
-        
-        buttonPanel.add(rightButtonPanel, BorderLayout.EAST);
+        buttonPanel.add(systemButtonsPanel, BorderLayout.EAST);
 
         cardLayout = new CardLayout();
         cardPanel = new JPanel(cardLayout);
@@ -153,41 +156,22 @@ public class ShippingPage extends JPanel {
     private JScrollPane createTablePanel() {
         String[] columnNames = { "송장번호", "보내는 사람", "연락처", "물품", "받는 사람", "주소", "요청사항", "배송 상태" };
         tableModel = new DefaultTableModel(columnNames, 0);
+        table = UITheme.createStyledTable(tableModel);
 
-        table = new JTable(tableModel) {
+        table.addMouseListener(new MouseAdapter() {
             @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-
-            @Override
-            public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
-                Component c = super.prepareRenderer(renderer, row, column);
-                if (!isRowSelected(row)) {
-                    c.setBackground(row % 2 == 0 ? UITheme.COLOR_BACKGROUND : UITheme.COLOR_ROW_ALT);
-                    c.setForeground(UITheme.COLOR_TEXT);
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    int row = table.getSelectedRow();
+                    if (row != -1) {
+                        // 모델 인덱스를 뷰 인덱스로 변환
+                        int modelRow = table.convertRowIndexToModel(row);
+                        DeliveryOrder order = originalList.get(modelRow);
+                        new WaybillDialog(mainFrame, order).setVisible(true);
+                    }
                 }
-                else {
-                    c.setBackground(UITheme.COLOR_BUTTON_HOVER);
-                    c.setForeground(UITheme.COLOR_TEXT);
-                }
-                return c;
             }
-        };
-
-        table.setFont(UITheme.FONT_LABEL);
-        table.setForeground(UITheme.COLOR_TEXT);
-        table.setGridColor(UITheme.COLOR_GRID);
-        table.setRowHeight(24);
-        table.setSelectionBackground(UITheme.COLOR_BUTTON_HOVER);
-        table.setSelectionForeground(UITheme.COLOR_TEXT);
-        table.setBackground(UITheme.COLOR_BACKGROUND);
-
-        JTableHeader header = table.getTableHeader();
-        header.setBackground(UITheme.COLOR_TABLE_HEADER);
-        header.setForeground(UITheme.COLOR_TEXT);
-        header.setFont(UITheme.FONT_TABLE_HEADER);
-        header.setPreferredSize(new Dimension(100, 30));
+        });
 
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.getViewport().setBackground(UITheme.COLOR_BACKGROUND);
@@ -256,7 +240,7 @@ public class ShippingPage extends JPanel {
         table.setFont(UITheme.FONT_LABEL);
         table.setForeground(UITheme.COLOR_TEXT);
         table.setGridColor(UITheme.COLOR_GRID);
-        table.setRowHeight(24);
+        table.setRowHeight(25);
         table.setSelectionBackground(UITheme.COLOR_BUTTON_HOVER);
         table.setSelectionForeground(UITheme.COLOR_TEXT);
         table.setBackground(UITheme.COLOR_BACKGROUND);
@@ -381,32 +365,41 @@ public class ShippingPage extends JPanel {
             mainFrame.showCard("LOGIN");
         });
 
-        // 배송 상태 필터링 리스너
-        btnFilterCompleted.addActionListener(e -> {
-            setActiveButton(btnFilterCompleted);
-            List<DeliveryOrder> listToShow = originalList.stream()
-                    .filter(order -> "배송완료".equals(order.getReceiver().getStatus()))
-                    .collect(Collectors.toList());
-            refreshTable(listToShow);
-            cardLayout.show(cardPanel, "TABLE");
-            currentActiveCard = "TABLE";
-        });
+        // 통합된 배송 상태 필터링 리스너
+        btnFilterStatus.addActionListener(e -> {
+            deliveryStatusFilterState = (deliveryStatusFilterState + 1) % 4;
+            setActiveButton(btnFilterStatus);
+            List<DeliveryOrder> listToShow = new ArrayList<>(originalList);
+            String statusFilter = "";
+            String buttonText = "배송 상태: ";
 
-        btnFilterInProgress.addActionListener(e -> {
-            setActiveButton(btnFilterInProgress);
-            List<DeliveryOrder> listToShow = originalList.stream()
-                    .filter(order -> "배송중".equals(order.getReceiver().getStatus()))
-                    .collect(Collectors.toList());
-            refreshTable(listToShow);
-            cardLayout.show(cardPanel, "TABLE");
-            currentActiveCard = "TABLE";
-        });
+            switch (deliveryStatusFilterState) {
+                case 1: // 배송 전
+                    statusFilter = "배송전";
+                    buttonText += statusFilter;
+                    break;
+                case 2: // 배송 중
+                    statusFilter = "배송중";
+                    buttonText += statusFilter;
+                    break;
+                case 3: // 배송 완료
+                    statusFilter = "배송완료";
+                    buttonText += statusFilter;
+                    break;
+                default: // 0, 전체
+                    buttonText += "전체";
+                    break;
+            }
 
-        btnFilterPending.addActionListener(e -> {
-            setActiveButton(btnFilterPending);
-            List<DeliveryOrder> listToShow = originalList.stream()
-                    .filter(order -> "배송전".equals(order.getReceiver().getStatus()))
-                    .collect(Collectors.toList());
+            btnFilterStatus.setText(buttonText);
+
+            if (!statusFilter.isEmpty()) {
+                final String finalStatusFilter = statusFilter;
+                listToShow = originalList.stream()
+                        .filter(order -> finalStatusFilter.equals(order.getReceiver().getStatus()))
+                        .collect(Collectors.toList());
+            }
+            
             refreshTable(listToShow);
             cardLayout.show(cardPanel, "TABLE");
             currentActiveCard = "TABLE";
@@ -435,20 +428,21 @@ public class ShippingPage extends JPanel {
                         })
                         .collect(Collectors.toList());
                 refreshTable(listToShow);
-            } else if (activeButton == btnFilterCompleted) {
-                List<DeliveryOrder> listToShow = originalList.stream()
-                        .filter(order -> "배송완료".equals(order.getReceiver().getStatus()))
-                        .collect(Collectors.toList());
-                refreshTable(listToShow);
-            } else if (activeButton == btnFilterInProgress) {
-                List<DeliveryOrder> listToShow = originalList.stream()
-                        .filter(order -> "배송중".equals(order.getReceiver().getStatus()))
-                        .collect(Collectors.toList());
-                refreshTable(listToShow);
-            } else if (activeButton == btnFilterPending) {
-                List<DeliveryOrder> listToShow = originalList.stream()
-                        .filter(order -> "배송전".equals(order.getReceiver().getStatus()))
-                        .collect(Collectors.toList());
+            } else if (activeButton == btnFilterStatus) {
+                // 통합된 상태 필터에 대한 로직
+                List<DeliveryOrder> listToShow = new ArrayList<>(originalList);
+                String statusFilter = "";
+                switch (deliveryStatusFilterState) {
+                    case 1: statusFilter = "배송전"; break;
+                    case 2: statusFilter = "배송중"; break;
+                    case 3: statusFilter = "배송완료"; break;
+                }
+                if (!statusFilter.isEmpty()) {
+                    final String finalStatusFilter = statusFilter;
+                    listToShow = originalList.stream()
+                            .filter(order -> finalStatusFilter.equals(order.getReceiver().getStatus()))
+                            .collect(Collectors.toList());
+                }
                 refreshTable(listToShow);
             } else { // Default to show all if no active filter/sort (btnGroupByRegion 포함)
                 refreshTable(new ArrayList<>(originalList));

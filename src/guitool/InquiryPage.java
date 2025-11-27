@@ -37,47 +37,55 @@ public class InquiryPage extends JPanel {
     }
 
     private void setupUI() {
-        // ================= 상단 패널 레이아웃 변경 (한 줄, 간격/크기 조절) =================
-        JPanel topPanel = new JPanel(new BorderLayout());
+        Dimension buttonSize = UITheme.BUTTON_DIMENSION_SMALL; // 버튼 크기 변수 선언
+        // ================= 상단 패널 레이아웃 =================
+        JPanel topPanel = new JPanel(new BorderLayout(2, 0));
         topPanel.setBackground(UITheme.COLOR_BACKGROUND);
         topPanel.setBorder(BorderFactory.createEmptyBorder(10, 5, 5, 5));
 
-        // --- 왼쪽: 뒤로가기 + 카테고리 버튼 ---
-        JPanel topLeftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0)); // 간격 10->5
-        topLeftPanel.setBackground(UITheme.COLOR_BACKGROUND);
-
-        Dimension buttonSize = UITheme.BUTTON_DIMENSION_SMALL; // 너비 110->100
-
+        // --- 왼쪽: 뒤로가기 버튼 ---
+        JPanel navButtonsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 0));
+        navButtonsPanel.setBackground(UITheme.COLOR_BACKGROUND);
         JButton backButton = UITheme.createStyledButton("뒤로가기");
-        backButton.setPreferredSize(buttonSize);
-        backButton.addActionListener(e -> {
-            mainFrame.showCard("SHIPPING"); // 배송 관리 페이지로 돌아감
-        });
-        topLeftPanel.add(backButton);
+        backButton.addActionListener(e -> mainFrame.showCard("LOGIN"));
+        navButtonsPanel.add(backButton);
+        
+        topPanel.add(navButtonsPanel, BorderLayout.WEST);
 
+        // --- 중앙: 검색 카테고리 버튼 ---
+        JPanel centerPanel = new JPanel(new GridLayout(1, 0, 2, 0));
+        centerPanel.setBackground(UITheme.COLOR_BACKGROUND);
+        
         String[] categories = {"보내는 사람", "받는 사람", "송장번호", "지역", "전화번호", "물품명"};
         for (String cat : categories) {
             JButton btn = UITheme.createStyledButton(cat);
-            btn.setPreferredSize(buttonSize);
             btn.addActionListener(e -> {
                 setActiveButton(btn);
                 openSubInquiryWindow(cat);
             });
-            topLeftPanel.add(btn);
+            centerPanel.add(btn);
         }
-        
-        topPanel.add(topLeftPanel, BorderLayout.WEST);
 
-        // --- 오른쪽: '배송 관리' 버튼 추가 ---
-        JPanel topRightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        topPanel.add(centerPanel, BorderLayout.CENTER);
+
+        // --- 오른쪽: 시스템 버튼 및 페이지 전환 ---
+        JPanel topRightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 2, 0));
         topRightPanel.setBackground(UITheme.COLOR_BACKGROUND);
 
         JButton btnGoToShipping = UITheme.createStyledButton("배송 관리");
-        btnGoToShipping.setPreferredSize(buttonSize);
         btnGoToShipping.addActionListener(e -> {
             mainFrame.showCard("SHIPPING");
         });
         topRightPanel.add(btnGoToShipping);
+        
+        dateLabel = new JLabel();
+        dateLabel.setForeground(UITheme.COLOR_TEXT);
+        dateLabel.setFont(UITheme.FONT_BUTTON);
+        updateDateLabel(); // 날짜 설정
+        topRightPanel.add(dateLabel);
+
+        advanceDayButton = UITheme.createStyledButton("날짜 갱신");
+        topRightPanel.add(advanceDayButton);
         
         topPanel.add(topRightPanel, BorderLayout.EAST);
 
@@ -87,41 +95,23 @@ public class InquiryPage extends JPanel {
         JScrollPane scrollPane = createTablePanel();
         add(scrollPane, BorderLayout.CENTER);
 
-        // ================= 하단 : 왼쪽(날짜) + 오른쪽(수정/삭제) =================
+        // ================= 하단 : 기능 버튼들 =================
         JPanel bottomPanel = new JPanel(new BorderLayout());
         bottomPanel.setBackground(UITheme.COLOR_BACKGROUND);
-
-        // --- 왼쪽 : 현재 날짜 + 날짜 갱신 버튼 ---
-        JPanel bottomLeftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
-        bottomLeftPanel.setBackground(UITheme.COLOR_BACKGROUND);
-
-        dateLabel = new JLabel();
-        dateLabel.setForeground(UITheme.COLOR_TEXT);
-        updateDateLabel(); // 처음 화면 띄울 때 날짜 설정
-        bottomLeftPanel.add(dateLabel);
-
-        advanceDayButton = UITheme.createStyledButton("날짜 갱신");
-        advanceDayButton.setPreferredSize(buttonSize);
-        bottomLeftPanel.add(advanceDayButton);
-
-        bottomPanel.add(bottomLeftPanel, BorderLayout.WEST);
-
-        // --- 오른쪽 : 주소 수정 / 주문 삭제 버튼 ---
         JPanel bottomRightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
         bottomRightPanel.setBackground(UITheme.COLOR_BACKGROUND);
 
         JButton btnEditAddress = UITheme.createStyledButton("✏️ 주소 수정");
-        btnEditAddress.setBackground(UITheme.COLOR_BUTTON_SPECIAL_YELLOW); // 연한 노랑
+        btnEditAddress.setBackground(UITheme.COLOR_BUTTON_SPECIAL_YELLOW);
         btnEditAddress.addActionListener(e -> editSelectedOrderAddress());
 
         JButton btnDelete = UITheme.createStyledButton("🗑️ 주문 삭제");
-        btnDelete.setBackground(UITheme.COLOR_BUTTON_SPECIAL_RED); // 연한 빨강
+        btnDelete.setBackground(UITheme.COLOR_BUTTON_SPECIAL_RED);
         btnDelete.addActionListener(e -> deleteSelectedOrder());
 
         bottomRightPanel.add(btnEditAddress);
         bottomRightPanel.add(btnDelete);
         bottomRightPanel.add(Box.createHorizontalStrut(20));
-
         bottomPanel.add(bottomRightPanel, BorderLayout.EAST);
 
         add(bottomPanel, BorderLayout.SOUTH);
@@ -130,13 +120,9 @@ public class InquiryPage extends JPanel {
         advanceDayButton.addActionListener(e -> {
             DeliverySystem.advanceDate();
             DeliverySystem.getInstance().updateDeliveryStatuses();
-
-            updateDateLabel();     // 라벨 갱신
-            updateTable(currentDisplayedList, false);   // 메시지 없이 테이블만 갱신
-
-            JOptionPane.showMessageDialog(this,
-                    "현재 날짜: " + DeliverySystem.getCurrentDate().toString()
-                            + "\n배송 상태가 업데이트되었습니다.");
+            updateDateLabel();
+            updateTable(currentDisplayedList, false);
+            JOptionPane.showMessageDialog(this, "날짜가 갱신되었습니다.", "알림", JOptionPane.INFORMATION_MESSAGE);
         });
     }
 
@@ -150,22 +136,7 @@ public class InquiryPage extends JPanel {
     private JScrollPane createTablePanel() {
         String[] columnNames = {"송장번호", "보내는 사람", "연락처", "물품명", "받는 사람", "주소", "요청사항", "배송 상태"};
         tableModel = new DefaultTableModel(columnNames, 0);
-
-        resultTable = new JTable(tableModel) {
-            @Override
-            public boolean isCellEditable(int row, int col) {
-                return false;
-            }
-
-            @Override
-            public Component prepareRenderer(TableCellRenderer r, int row, int col) {
-                Component c = super.prepareRenderer(r, row, col);
-                c.setBackground(!isRowSelected(row)
-                        ? (row % 2 == 0 ? UITheme.COLOR_BACKGROUND : UITheme.COLOR_ROW_ALT)
-                        : UITheme.COLOR_BUTTON_HOVER);
-                return c;
-            }
-        };
+        resultTable = UITheme.createStyledTable(tableModel);
 
         resultTable.addMouseListener(new MouseAdapter() {
             @Override
@@ -180,12 +151,10 @@ public class InquiryPage extends JPanel {
             }
         });
 
-        resultTable.setRowHeight(26);
-        resultTable.getTableHeader().setBackground(UITheme.COLOR_TABLE_HEADER);
-        resultTable.setBackground(UITheme.COLOR_BACKGROUND);
-
         JScrollPane scroll = new JScrollPane(resultTable);
         scroll.getViewport().setBackground(UITheme.COLOR_BACKGROUND);
+        scroll.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
+        scroll.setBackground(UITheme.COLOR_BACKGROUND);
         return scroll;
     }
 
