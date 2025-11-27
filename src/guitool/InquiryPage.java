@@ -10,16 +10,11 @@ import java.util.ArrayList;
 import main.DeliveryOrder;
 import main.DeliverySystem;
 import search.*;
+import guitool.UITheme; // UITheme 임포트
 
 public class InquiryPage extends JFrame {
 
-    // --- 디자인 색상 (통일) ---
-    private static final Color COLOR_BACKGROUND = new Color(239, 222, 207);
-    private static final Color COLOR_BUTTON = new Color(225, 205, 188);
-    private static final Color COLOR_BUTTON_HOVER = new Color(218, 184, 153);
-    private static final Color COLOR_TABLE_HEADER = new Color(218, 184, 153);
-    private static final Color COLOR_TEXT = new Color(77, 77, 77);
-    private static final Color COLOR_ROW_ALT = new Color(247, 241, 235);
+
 
     private JTable resultTable;
     private DefaultTableModel tableModel;
@@ -37,7 +32,7 @@ public class InquiryPage extends JFrame {
         setSize(900, 650);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
-        getContentPane().setBackground(COLOR_BACKGROUND);
+        getContentPane().setBackground(UITheme.COLOR_BACKGROUND);
 
         setupUI();
         setVisible(true);
@@ -46,16 +41,16 @@ public class InquiryPage extends JFrame {
     private void setupUI() {
         // ================= 상단 패널 레이아웃 변경 (한 줄, 간격/크기 조절) =================
         JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.setBackground(COLOR_BACKGROUND);
+        topPanel.setBackground(UITheme.COLOR_BACKGROUND);
         topPanel.setBorder(BorderFactory.createEmptyBorder(10, 5, 5, 5));
 
         // --- 왼쪽: 뒤로가기 + 카테고리 버튼 ---
         JPanel topLeftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0)); // 간격 10->5
-        topLeftPanel.setBackground(COLOR_BACKGROUND);
+        topLeftPanel.setBackground(UITheme.COLOR_BACKGROUND);
 
-        Dimension buttonSize = new Dimension(100, 30); // 너비 110->100
+        Dimension buttonSize = UITheme.BUTTON_DIMENSION_SMALL; // 너비 110->100
 
-        JButton backButton = createStyledButton("뒤로가기");
+        JButton backButton = UITheme.createStyledButton("뒤로가기");
         backButton.setPreferredSize(buttonSize);
         backButton.addActionListener(e -> {
             parentFrame.setVisible(true);
@@ -65,7 +60,7 @@ public class InquiryPage extends JFrame {
 
         String[] categories = {"보내는 사람", "받는 사람", "송장번호", "지역", "전화번호", "물품명"};
         for (String cat : categories) {
-            JButton btn = createStyledButton(cat);
+            JButton btn = UITheme.createStyledButton(cat);
             btn.setPreferredSize(buttonSize);
             btn.addActionListener(e -> {
                 setActiveButton(btn);
@@ -78,9 +73,9 @@ public class InquiryPage extends JFrame {
 
         // --- 오른쪽: '배송 관리' 버튼 추가 ---
         JPanel topRightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
-        topRightPanel.setBackground(COLOR_BACKGROUND);
+        topRightPanel.setBackground(UITheme.COLOR_BACKGROUND);
 
-        JButton btnGoToShipping = createStyledButton("배송 관리");
+        JButton btnGoToShipping = UITheme.createStyledButton("배송 관리");
         btnGoToShipping.setPreferredSize(buttonSize);
         btnGoToShipping.addActionListener(e -> {
             new ShippingPage(parentFrame);
@@ -98,18 +93,18 @@ public class InquiryPage extends JFrame {
 
         // ================= 하단 : 왼쪽(날짜) + 오른쪽(수정/삭제) =================
         JPanel bottomPanel = new JPanel(new BorderLayout());
-        bottomPanel.setBackground(COLOR_BACKGROUND);
+        bottomPanel.setBackground(UITheme.COLOR_BACKGROUND);
 
         // --- 왼쪽 : 현재 날짜 + 날짜 갱신 버튼 ---
         JPanel bottomLeftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
-        bottomLeftPanel.setBackground(COLOR_BACKGROUND);
+        bottomLeftPanel.setBackground(UITheme.COLOR_BACKGROUND);
 
         dateLabel = new JLabel();
-        dateLabel.setForeground(COLOR_TEXT);
+        dateLabel.setForeground(UITheme.COLOR_TEXT);
         updateDateLabel(); // 처음 화면 띄울 때 날짜 설정
         bottomLeftPanel.add(dateLabel);
 
-        advanceDayButton = createStyledButton("날짜 갱신");
+        advanceDayButton = UITheme.createStyledButton("날짜 갱신");
         advanceDayButton.setPreferredSize(buttonSize);
         bottomLeftPanel.add(advanceDayButton);
 
@@ -117,14 +112,14 @@ public class InquiryPage extends JFrame {
 
         // --- 오른쪽 : 주소 수정 / 주문 삭제 버튼 ---
         JPanel bottomRightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
-        bottomRightPanel.setBackground(COLOR_BACKGROUND);
+        bottomRightPanel.setBackground(UITheme.COLOR_BACKGROUND);
 
-        JButton btnEditAddress = createStyledButton("✏️ 주소 수정");
-        btnEditAddress.setBackground(new Color(255, 250, 205)); // 연한 노랑
+        JButton btnEditAddress = UITheme.createStyledButton("✏️ 주소 수정");
+        btnEditAddress.setBackground(UITheme.COLOR_BUTTON_SPECIAL_YELLOW); // 연한 노랑
         btnEditAddress.addActionListener(e -> editSelectedOrderAddress());
 
-        JButton btnDelete = createStyledButton("🗑️ 주문 삭제");
-        btnDelete.setBackground(new Color(255, 200, 200)); // 연한 빨강
+        JButton btnDelete = UITheme.createStyledButton("🗑️ 주문 삭제");
+        btnDelete.setBackground(UITheme.COLOR_BUTTON_SPECIAL_RED); // 연한 빨강
         btnDelete.addActionListener(e -> deleteSelectedOrder());
 
         bottomRightPanel.add(btnEditAddress);
@@ -170,8 +165,8 @@ public class InquiryPage extends JFrame {
             public Component prepareRenderer(TableCellRenderer r, int row, int col) {
                 Component c = super.prepareRenderer(r, row, col);
                 c.setBackground(!isRowSelected(row)
-                        ? (row % 2 == 0 ? COLOR_BACKGROUND : COLOR_ROW_ALT)
-                        : COLOR_BUTTON_HOVER);
+                        ? (row % 2 == 0 ? UITheme.COLOR_BACKGROUND : UITheme.COLOR_ROW_ALT)
+                        : UITheme.COLOR_BUTTON_HOVER);
                 return c;
             }
         };
@@ -190,11 +185,11 @@ public class InquiryPage extends JFrame {
         });
 
         resultTable.setRowHeight(26);
-        resultTable.getTableHeader().setBackground(COLOR_TABLE_HEADER);
-        resultTable.setBackground(COLOR_BACKGROUND);
+        resultTable.getTableHeader().setBackground(UITheme.COLOR_TABLE_HEADER);
+        resultTable.setBackground(UITheme.COLOR_BACKGROUND);
 
         JScrollPane scroll = new JScrollPane(resultTable);
-        scroll.getViewport().setBackground(COLOR_BACKGROUND);
+        scroll.getViewport().setBackground(UITheme.COLOR_BACKGROUND);
         return scroll;
     }
 
@@ -317,27 +312,11 @@ public class InquiryPage extends JFrame {
         }
     }
 
-    private JButton createStyledButton(String text) {
-        JButton button = new JButton(text);
-        button.setBackground(COLOR_BUTTON);
-        button.setForeground(COLOR_TEXT);
-        button.setFocusPainted(false);
-        button.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
-        button.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) {
-                button.setBackground(COLOR_BUTTON_HOVER);
-            }
 
-            public void mouseExited(MouseEvent e) {
-                if (button != activeButton) button.setBackground(COLOR_BUTTON);
-            }
-        });
-        return button;
-    }
 
     private void setActiveButton(JButton btn) {
-        if (activeButton != null) activeButton.setBackground(COLOR_BUTTON);
+        if (activeButton != null) activeButton.setBackground(UITheme.COLOR_BUTTON);
         activeButton = btn;
-        btn.setBackground(new Color(200, 170, 140));
+        btn.setBackground(UITheme.COLOR_BUTTON_ACTIVE);
     }
 }

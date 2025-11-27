@@ -17,18 +17,11 @@ import java.util.stream.Collectors;
 
 import main.DeliveryOrder;
 import main.DeliverySystem;
+import guitool.UITheme; // UITheme 임포트
 
 public class ShippingPage extends JFrame {
 
-    // --- [디자인] 사용할 색상 정의 ---
-    private static final Color COLOR_BACKGROUND = new Color(239, 222, 207);
-    private static final Color COLOR_BUTTON = new Color(225, 205, 188);
-    private static final Color COLOR_BUTTON_HOVER = new Color(218, 184, 153);
-    private static final Color COLOR_BUTTON_ACTIVE = new Color(200, 170, 140);
-    private static final Color COLOR_TABLE_HEADER = new Color(218, 184, 153);
-    private static final Color COLOR_TEXT = new Color(77, 77, 77);
-    private static final Color COLOR_GRID = new Color(220, 200, 185);
-    private static final Color COLOR_ROW_ALT = new Color(247, 241, 235);
+
 
     private CardLayout cardLayout;
     private JPanel cardPanel;
@@ -89,7 +82,7 @@ public class ShippingPage extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        getContentPane().setBackground(COLOR_BACKGROUND);
+        getContentPane().setBackground(UITheme.COLOR_BACKGROUND);
         originalList = DeliverySystem.getInstance().Dlist;
 
         setupUI();
@@ -105,21 +98,21 @@ public class ShippingPage extends JFrame {
 
     private void setupUI() {
         JPanel buttonPanel = new JPanel(new BorderLayout());
-        buttonPanel.setBackground(COLOR_BACKGROUND);
+        buttonPanel.setBackground(UITheme.COLOR_BACKGROUND);
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 5, 5, 5));
 
         JPanel leftButtonsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        leftButtonsPanel.setBackground(COLOR_BACKGROUND);
+        leftButtonsPanel.setBackground(UITheme.COLOR_BACKGROUND);
 
-        backButton = createStyledButton("뒤로가기");
-        btnShowAll = createStyledButton("전체 보기");
-        btnSortSender = createStyledButton("보내는 사람 순");
-        btnSortReceiver = createStyledButton("받는 사람 순");  // ← 텍스트 변경
-        btnGroupByRegion = createStyledButton("지역 별 요약");
-        btnFilterRequests = createStyledButton("요청사항 보기");
-        btnFilterCompleted = createStyledButton("배송 완료");
-        btnFilterInProgress = createStyledButton("배송 중");
-        btnFilterPending = createStyledButton("배송 전");
+        backButton = UITheme.createStyledButton("뒤로가기");
+        btnShowAll = UITheme.createStyledButton("전체 보기");
+        btnSortSender = UITheme.createStyledButton("보내는 사람 순");
+        btnSortReceiver = UITheme.createStyledButton("받는 사람 순");  // ← 텍스트 변경
+        btnGroupByRegion = UITheme.createStyledButton("지역 별 요약");
+        btnFilterRequests = UITheme.createStyledButton("요청사항 보기");
+        btnFilterCompleted = UITheme.createStyledButton("배송 완료");
+        btnFilterInProgress = UITheme.createStyledButton("배송 중");
+        btnFilterPending = UITheme.createStyledButton("배송 전");
 
         leftButtonsPanel.add(backButton);
         leftButtonsPanel.add(btnShowAll);
@@ -133,26 +126,26 @@ public class ShippingPage extends JFrame {
 
         // 배송 상태 순 버튼 대신 날짜 라벨 추가
         dateLabel = new JLabel("현재 날짜: " + DeliverySystem.getCurrentDate().toString());
-        dateLabel.setForeground(COLOR_TEXT);
-        dateLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
+        dateLabel.setForeground(UITheme.COLOR_TEXT);
+        dateLabel.setFont(UITheme.FONT_BUTTON);
         leftButtonsPanel.add(dateLabel);
 
         buttonPanel.add(leftButtonsPanel, BorderLayout.WEST); // 왼쪽 버튼 패널을 서쪽에 추가
 
         JPanel rightButtonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        rightButtonPanel.setBackground(COLOR_BACKGROUND);
+        rightButtonPanel.setBackground(UITheme.COLOR_BACKGROUND);
         
-        btnGoToInquiry = createStyledButton("주문 관리");
+        btnGoToInquiry = UITheme.createStyledButton("주문 관리");
         rightButtonPanel.add(btnGoToInquiry);
 
-        advanceDayButton = createStyledButton("날짜 갱신");  // ← 텍스트 변경
+        advanceDayButton = UITheme.createStyledButton("날짜 갱신");  // ← 텍스트 변경
         rightButtonPanel.add(advanceDayButton);
         
         buttonPanel.add(rightButtonPanel, BorderLayout.EAST);
 
         cardLayout = new CardLayout();
         cardPanel = new JPanel(cardLayout);
-        cardPanel.setBackground(COLOR_BACKGROUND);
+        cardPanel.setBackground(UITheme.COLOR_BACKGROUND);
 
         JScrollPane tableScrollPane = createTablePanel();
         cardPanel.add(tableScrollPane, "TABLE");
@@ -178,34 +171,35 @@ public class ShippingPage extends JFrame {
             public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
                 Component c = super.prepareRenderer(renderer, row, column);
                 if (!isRowSelected(row)) {
-                    c.setBackground(row % 2 == 0 ? COLOR_BACKGROUND : COLOR_ROW_ALT);
-                    c.setForeground(COLOR_TEXT);
-                } else {
-                    c.setBackground(COLOR_BUTTON_HOVER);
-                    c.setForeground(COLOR_TEXT);
+                    c.setBackground(row % 2 == 0 ? UITheme.COLOR_BACKGROUND : UITheme.COLOR_ROW_ALT);
+                    c.setForeground(UITheme.COLOR_TEXT);
+                }
+                else {
+                    c.setBackground(UITheme.COLOR_BUTTON_HOVER);
+                    c.setForeground(UITheme.COLOR_TEXT);
                 }
                 return c;
             }
         };
 
-        table.setFont(new Font("SansSerif", Font.PLAIN, 12));
-        table.setForeground(COLOR_TEXT);
-        table.setGridColor(COLOR_GRID);
+        table.setFont(UITheme.FONT_LABEL);
+        table.setForeground(UITheme.COLOR_TEXT);
+        table.setGridColor(UITheme.COLOR_GRID);
         table.setRowHeight(24);
-        table.setSelectionBackground(COLOR_BUTTON_HOVER);
-        table.setSelectionForeground(COLOR_TEXT);
-        table.setBackground(COLOR_BACKGROUND);
+        table.setSelectionBackground(UITheme.COLOR_BUTTON_HOVER);
+        table.setSelectionForeground(UITheme.COLOR_TEXT);
+        table.setBackground(UITheme.COLOR_BACKGROUND);
 
         JTableHeader header = table.getTableHeader();
-        header.setBackground(COLOR_TABLE_HEADER);
-        header.setForeground(COLOR_TEXT);
-        header.setFont(new Font("SansSerif", Font.BOLD, 13));
+        header.setBackground(UITheme.COLOR_TABLE_HEADER);
+        header.setForeground(UITheme.COLOR_TEXT);
+        header.setFont(UITheme.FONT_TABLE_HEADER);
         header.setPreferredSize(new Dimension(100, 30));
 
         JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.getViewport().setBackground(COLOR_BACKGROUND);
+        scrollPane.getViewport().setBackground(UITheme.COLOR_BACKGROUND);
         scrollPane.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
-        scrollPane.setBackground(COLOR_BACKGROUND);
+        scrollPane.setBackground(UITheme.COLOR_BACKGROUND);
 
         return scrollPane;
     }
@@ -230,7 +224,7 @@ public class ShippingPage extends JFrame {
             e.printStackTrace();
         }
         mapLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        mapLabel.setBackground(COLOR_BACKGROUND);
+        mapLabel.setBackground(UITheme.COLOR_BACKGROUND);
         mapLabel.setOpaque(true);
 
         // 테이블 생성
@@ -252,7 +246,7 @@ public class ShippingPage extends JFrame {
         colorColumn.setMaxWidth(60);
 
         JScrollPane summaryTableScrollPane = new JScrollPane(summaryTable);
-        summaryTableScrollPane.getViewport().setBackground(COLOR_BACKGROUND);
+        summaryTableScrollPane.getViewport().setBackground(UITheme.COLOR_BACKGROUND);
         summaryTableScrollPane.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
 
         JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, mapLabel, summaryTableScrollPane);
@@ -260,53 +254,30 @@ public class ShippingPage extends JFrame {
         split.setDividerLocation(400);
         split.setResizeWeight(0.5);
         split.setBorder(BorderFactory.createEmptyBorder());
-        split.setBackground(COLOR_BACKGROUND);
+        split.setBackground(UITheme.COLOR_BACKGROUND);
 
         return split;
     }
 
     private void setupSummaryTable(JTable table) {
-        table.setFont(new Font("SansSerif", Font.PLAIN, 12));
-        table.setForeground(COLOR_TEXT);
-        table.setGridColor(COLOR_GRID);
+        table.setFont(UITheme.FONT_LABEL);
+        table.setForeground(UITheme.COLOR_TEXT);
+        table.setGridColor(UITheme.COLOR_GRID);
         table.setRowHeight(24);
-        table.setSelectionBackground(COLOR_BUTTON_HOVER);
-        table.setSelectionForeground(COLOR_TEXT);
-        table.setBackground(COLOR_BACKGROUND);
+        table.setSelectionBackground(UITheme.COLOR_BUTTON_HOVER);
+        table.setSelectionForeground(UITheme.COLOR_TEXT);
+        table.setBackground(UITheme.COLOR_BACKGROUND);
 
         JTableHeader header = table.getTableHeader();
-        header.setBackground(COLOR_TABLE_HEADER);
-        header.setForeground(COLOR_TEXT);
-        header.setFont(new Font("SansSerif", Font.BOLD, 13));
+        header.setBackground(UITheme.COLOR_TABLE_HEADER);
+        header.setForeground(UITheme.COLOR_TEXT);
+        header.setFont(UITheme.FONT_TABLE_HEADER);
         header.setPreferredSize(new Dimension(100, 30));
 
         table.setDefaultRenderer(Color.class, new ColorSquareRenderer());
     }
 
-    private JButton createStyledButton(String text) {
-        JButton button = new JButton(text);
-        button.setBackground(COLOR_BUTTON);
-        button.setForeground(COLOR_TEXT);
-        button.setFont(new Font("SansSerif", Font.BOLD, 12));
-        button.setFocusPainted(false);
-        button.setBorder(BorderFactory.createEmptyBorder(6, 12, 6, 12));
 
-        button.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                button.setBackground(COLOR_BUTTON_HOVER);
-            }
-            @Override
-            public void mouseExited(MouseEvent e) {
-                if (button == activeButton) {
-                    button.setBackground(COLOR_BUTTON_ACTIVE);
-                } else {
-                    button.setBackground(COLOR_BUTTON);
-                }
-            }
-        });
-        return button;
-    }
 
     private void refreshTable(List<DeliveryOrder> listToShow) {
         tableModel.setRowCount(0);
@@ -352,9 +323,9 @@ public class ShippingPage extends JFrame {
 
     private void setActiveButton(JButton clickedButton) {
         if (activeButton != null) {
-            activeButton.setBackground(COLOR_BUTTON);
+            activeButton.setBackground(UITheme.COLOR_BUTTON);
         }
-        clickedButton.setBackground(COLOR_BUTTON_ACTIVE);
+        clickedButton.setBackground(UITheme.COLOR_BUTTON_ACTIVE);
         this.activeButton = clickedButton;
     }
 

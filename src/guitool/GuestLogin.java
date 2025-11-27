@@ -7,6 +7,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import guitool.UITheme;
 
 /**
  * 게스트 로그인 페이지 (배송 조회 기능)
@@ -20,9 +21,7 @@ public class GuestLogin extends JFrame {
     private JTextArea resultArea;
     private JButton advanceDayButton;
     
-    private final Color backgroundColor = new Color(239, 222, 207);
-    private final Color buttonColor = new Color(180, 160, 140);
-    private final Color textColor = Color.BLACK;
+
 
     public GuestLogin(JFrame parent) { // 생성자에서 이전 창을 받음
         this.parentFrame = parent; // 이전 창 저장
@@ -33,61 +32,44 @@ public class GuestLogin extends JFrame {
         setLocationRelativeTo(null);
 
         Container contentPane = getContentPane();
-        contentPane.setBackground(backgroundColor);
+        contentPane.setBackground(UITheme.COLOR_BACKGROUND);
         contentPane.setLayout(new BorderLayout(10, 10));
 
         JPanel masterTopPanel = new JPanel(new BorderLayout());
-        masterTopPanel.setBackground(backgroundColor);
+        masterTopPanel.setBackground(UITheme.COLOR_BACKGROUND);
         masterTopPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
         // 뒤로가기 버튼
-        JButton backButton = new JButton("뒤로가기");
-        backButton.setBackground(buttonColor);
-        backButton.setForeground(Color.BLACK);
-        backButton.setFocusPainted(false);
-        backButton.setPreferredSize(new Dimension(80, 25)); // 너비 고정
+        JButton backButton = UITheme.createGuestStyledButton("뒤로가기", new Dimension(80, 25));
         masterTopPanel.add(backButton, BorderLayout.WEST);
 
         JPanel inputPanel = new JPanel();
-        inputPanel.setBackground(backgroundColor);
+        inputPanel.setBackground(UITheme.COLOR_BACKGROUND);
         inputPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 15, 0));
 
         JLabel instructionLabel = new JLabel("송장번호:");
-        instructionLabel.setForeground(textColor);
+        instructionLabel.setForeground(UITheme.COLOR_TEXT);
         inputPanel.add(instructionLabel);
 
         invoiceField = new JTextField(7);
         inputPanel.add(invoiceField);
 
-        searchButton = new JButton("조회");
-        searchButton.setBackground(buttonColor);
-        searchButton.setForeground(Color.BLACK);
-        searchButton.setFocusPainted(false);
-        searchButton.setPreferredSize(new Dimension(50, 25));
+        searchButton = UITheme.createGuestStyledButton("조회", new Dimension(50, 25));
         inputPanel.add(searchButton);
 
-        hintButton = new JButton("?");
-        // hintButton.setBackground(new Color(100, 100, 100)); // 회색
-        hintButton.setBackground(buttonColor);
-        hintButton.setForeground(Color.BLACK);
+        hintButton = UITheme.createGuestStyledButton("?", new Dimension(25, 25));
         hintButton.setToolTipText("테스트용 송장번호 확인");
-        hintButton.setFocusPainted(false);
-        hintButton.setPreferredSize(new Dimension(25, 25));
         inputPanel.add(hintButton);
         
         masterTopPanel.add(inputPanel, BorderLayout.CENTER);
 
         // 날짜 하루 지나게 하기 버튼
-        advanceDayButton = new JButton("하루 지남");
-        advanceDayButton.setBackground(buttonColor);
-        advanceDayButton.setForeground(Color.BLACK);
-        advanceDayButton.setFocusPainted(false);
-        advanceDayButton.setPreferredSize(new Dimension(80, 25)); // 너비 고정
+        advanceDayButton = UITheme.createGuestStyledButton("하루 지남", new Dimension(80, 25));
         masterTopPanel.add(advanceDayButton, BorderLayout.EAST);
         
         resultArea = new JTextArea();
         resultArea.setEditable(false);
-        resultArea.setBackground(new Color(250, 245, 235));
+        resultArea.setBackground(UITheme.COLOR_TEXTAREA_BACKGROUND);
         resultArea.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         JScrollPane scrollPane = new JScrollPane(resultArea);
