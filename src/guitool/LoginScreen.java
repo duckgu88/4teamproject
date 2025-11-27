@@ -5,16 +5,16 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-public class LoginScreen extends JFrame {
+public class LoginScreen extends JPanel {
 
     private Image backgroundImage;
+    private MainFrame mainFrame; // MainFrame 참조
 
-    public LoginScreen() {
+    public LoginScreen(MainFrame mainFrame) {
+        this.mainFrame = mainFrame;
         // --- 1. 배경 이미지 로드 ---
         try {
-            // 경로 수정: /guitool/image/...
             java.net.URL imgUrl = getClass().getResource("/image/backgroundimage.jpg");
-            
             if (imgUrl != null) {
                 backgroundImage = new ImageIcon(imgUrl).getImage();
             } else {
@@ -25,27 +25,7 @@ public class LoginScreen extends JFrame {
             backgroundImage = null;
         }
 
-        setTitle("로그인 화면");
-        setSize(800, 500);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
-        setResizable(false);
-
-        // --- 2. 배경 패널 ---
-        JPanel backgroundPanel = new JPanel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                if (backgroundImage != null) {
-                    g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
-                } else {
-                    g.setColor(Color.LIGHT_GRAY);
-                    g.fillRect(0, 0, getWidth(), getHeight());
-                }
-            }
-        };
-        backgroundPanel.setLayout(null);
-        setContentPane(backgroundPanel);
+        setLayout(null);
 
         // --- 3. 로그인 UI ---
         int startX_label = 510;
@@ -59,32 +39,32 @@ public class LoginScreen extends JFrame {
         JLabel idLabel = new JLabel("아이디:");
         idLabel.setBounds(startX_label, startY, labelWidth, 25);
         idLabel.setForeground(Color.BLACK);
-        backgroundPanel.add(idLabel);
+        add(idLabel);
 
         JTextField idText = new JTextField(20);
         idText.setBounds(startX_field, startY, fieldWidth, 25);
-        backgroundPanel.add(idText);
+        add(idText);
 
         JLabel pwLabel = new JLabel("비밀번호:");
         pwLabel.setBounds(startX_label, startY + verticalGap, labelWidth, 25);
         pwLabel.setForeground(Color.BLACK);
-        backgroundPanel.add(pwLabel);
+        add(pwLabel);
 
         JPasswordField pwText = new JPasswordField(20);
         pwText.setBounds(startX_field, startY + verticalGap, fieldWidth, 25);
-        backgroundPanel.add(pwText);
+        add(pwText);
 
         JButton loginButton = new JButton("로그인");
         loginButton.setBounds(startX_field, startY + (verticalGap * 2), 90, 25);
-        backgroundPanel.add(loginButton);
+        add(loginButton);
 
         JButton cancelButton = new JButton("취소");
         cancelButton.setBounds(startX_field + 90 + 10, startY + (verticalGap * 2), 90, 25);
-        backgroundPanel.add(cancelButton);
+        add(cancelButton);
 
         JButton guestLoginButton = new JButton("게스트 로그인");
         guestLoginButton.setBounds(startX_field, startY + (verticalGap * 2) + buttonGap, fieldWidth, 25);
-        backgroundPanel.add(guestLoginButton);
+        add(guestLoginButton);
 
         // --- 이벤트 리스너 ---
         loginButton.addActionListener(new ActionListener() {
@@ -94,10 +74,9 @@ public class LoginScreen extends JFrame {
                 String password = new String(pwText.getPassword());
 
                 if (id.equals("manager") && password.equals("qwer1234")) {
-                    new ShippingPage(LoginScreen.this); // ShippingPage를 직접 열도록 수정
-                    setVisible(false); // 현재 창을 닫는 대신 숨김
+                    mainFrame.showCard("SHIPPING"); // ShippingPage로 전환
                 } else {
-                    JOptionPane.showMessageDialog(null, "아이디 또는 비밀번호가 틀렸습니다.", "로그인 실패", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(LoginScreen.this, "아이디 또는 비밀번호가 틀렸습니다.", "로그인 실패", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
@@ -106,8 +85,7 @@ public class LoginScreen extends JFrame {
         guestLoginButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                new GuestLogin(LoginScreen.this); // 현재 창(this)을 다음 창으로 넘겨줌
-                setVisible(false); // 로그인 창은 숨김
+                mainFrame.showCard("GUEST"); // GuestLogin으로 전환
             }
         });
 
@@ -117,11 +95,29 @@ public class LoginScreen extends JFrame {
                 System.exit(0);
             }
         });
-
-        setVisible(true);
     }
 
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        if (backgroundImage != null) {
+            g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
+        } else {
+            g.setColor(Color.LIGHT_GRAY);
+            g.fillRect(0, 0, getWidth(), getHeight());
+        }
+    }
+
+    // This main method is now only for isolated testing of the panel
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new LoginScreen());
+        SwingUtilities.invokeLater(() -> {
+            JFrame testFrame = new JFrame("Login Screen Test");
+            // We pass null for MainFrame as this is just a test
+            testFrame.add(new LoginScreen(null));
+            testFrame.setSize(800, 500);
+            testFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            testFrame.setLocationRelativeTo(null);
+            testFrame.setVisible(true);
+        });
     }
 }

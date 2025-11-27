@@ -10,7 +10,7 @@ public class GUIApp {
 
         // 2. EDT(Event Dispatch Thread)에서 GUI를 안전하게 실행
         SwingUtilities.invokeLater(() -> {
-            new LoginScreen(); // 로그인 화면부터 시작
+            new MainFrame(); // 메인 프레임부터 시작
         });
     }
-}           
+}

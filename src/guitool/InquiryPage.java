@@ -12,14 +12,13 @@ import main.DeliverySystem;
 import search.*;
 import guitool.UITheme; // UITheme 임포트
 
-public class InquiryPage extends JFrame {
+public class InquiryPage extends JPanel {
 
-
+    private MainFrame mainFrame; // MainFrame 참조
 
     private JTable resultTable;
     private DefaultTableModel tableModel;
     private JButton activeButton = null;
-    private JFrame parentFrame;
     private JButton advanceDayButton;
     private JLabel dateLabel; // 현재 날짜 표시용 라벨
     private InquiryPresenter presenter; // 프레젠터 필드 추가
@@ -27,18 +26,14 @@ public class InquiryPage extends JFrame {
     // 현재 조회된 리스트를 저장 (수정/삭제 시 인덱스 매핑용)
     private ArrayList<DeliveryOrder> currentDisplayedList = new ArrayList<>();
 
-    public InquiryPage(JFrame parent) {
-        this.parentFrame = parent;
-        setTitle("주문 관리 시스템 (Manager Mode)");
-        setSize(900, 650);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLocationRelativeTo(null);
-        getContentPane().setBackground(UITheme.COLOR_BACKGROUND);
+    public InquiryPage(MainFrame mainFrame) {
+        this.mainFrame = mainFrame;
+        setLayout(new BorderLayout());
+        setBackground(UITheme.COLOR_BACKGROUND);
 
         this.presenter = new InquiryPresenter(this); // 프레젠터 초기화
 
         setupUI();
-        setVisible(true);
     }
 
     private void setupUI() {
@@ -56,8 +51,7 @@ public class InquiryPage extends JFrame {
         JButton backButton = UITheme.createStyledButton("뒤로가기");
         backButton.setPreferredSize(buttonSize);
         backButton.addActionListener(e -> {
-            parentFrame.setVisible(true);
-            dispose();
+            mainFrame.showCard("SHIPPING"); // 배송 관리 페이지로 돌아감
         });
         topLeftPanel.add(backButton);
 
@@ -81,8 +75,7 @@ public class InquiryPage extends JFrame {
         JButton btnGoToShipping = UITheme.createStyledButton("배송 관리");
         btnGoToShipping.setPreferredSize(buttonSize);
         btnGoToShipping.addActionListener(e -> {
-            new ShippingPage(parentFrame);
-            dispose();
+            mainFrame.showCard("SHIPPING");
         });
         topRightPanel.add(btnGoToShipping);
         
@@ -181,7 +174,7 @@ public class InquiryPage extends JFrame {
                     int row = resultTable.getSelectedRow();
                     if (row != -1) {
                         DeliveryOrder order = currentDisplayedList.get(row);
-                        new WaybillDialog(InquiryPage.this, order).setVisible(true);
+                        new WaybillDialog(mainFrame, order).setVisible(true);
                     }
                 }
             }
@@ -219,7 +212,7 @@ public class InquiryPage extends JFrame {
     public void onEditAddressSuccess(DeliveryOrder editedOrder, String newAddress) {
         int rowIndex = currentDisplayedList.indexOf(editedOrder);
         if (rowIndex != -1) {
-            tableModel.setValueAt(newAddress, rowIndex, 3); // 3번 컬럼이 주소
+            tableModel.setValueAt(newAddress, rowIndex, 5); // 5번 컬럼이 주소
         }
         JOptionPane.showMessageDialog(this, "주소가 수정되었습니다.");
     }
@@ -261,20 +254,22 @@ public class InquiryPage extends JFrame {
 
     private void openSubInquiryWindow(String category) {
         SubInquiryPage subPanel = new SubInquiryPage(category);
+        JDialog subDialog = new JDialog(mainFrame, "조회 - " + category, true);
+
         subPanel.setSearchButtonListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String keyword = subPanel.getInputText();
                 presenter.performSearch(category, keyword); // Call presenter
-                SwingUtilities.getWindowAncestor(subPanel).dispose();
+                subDialog.dispose();
             }
         });
 
-        JFrame subFrame = new JFrame("조회 - " + category);
-        subFrame.setSize(400, 150);
-        subFrame.setLocationRelativeTo(this);
-        subFrame.setContentPane(subPanel);
-        subFrame.setVisible(true);
+        subDialog.setSize(400, 150);
+        subDialog.setLocationRelativeTo(mainFrame);
+        subDialog.setContentPane(subPanel);
+        subDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        subDialog.setVisible(true);
     }
 
     /**
@@ -305,8 +300,6 @@ public class InquiryPage extends JFrame {
             });
         }
     }
-
-
 
     private void setActiveButton(JButton btn) {
         if (activeButton != null) activeButton.setBackground(UITheme.COLOR_BUTTON);

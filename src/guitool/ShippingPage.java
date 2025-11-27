@@ -19,9 +19,9 @@ import main.DeliveryOrder;
 import main.DeliverySystem;
 import guitool.UITheme; // UITheme 임포트
 
-public class ShippingPage extends JFrame {
+public class ShippingPage extends JPanel {
 
-
+    private MainFrame mainFrame;
 
     private CardLayout cardLayout;
     private JPanel cardPanel;
@@ -34,7 +34,6 @@ public class ShippingPage extends JFrame {
     private JSplitPane splitPane;
 
     private List<DeliveryOrder> originalList;
-    private JFrame parentFrame;
     private String currentActiveCard = "TABLE";
 
     private JButton btnShowAll;
@@ -75,14 +74,10 @@ public class ShippingPage extends JFrame {
         REGION_COLOR_MAP.put("인천광역시", new Color(253, 226, 147));
     }
 
-    public ShippingPage(JFrame parent) { // 생성자에서 이전 창을 받음
-        this.parentFrame = parent; // 이전 창 저장
-        setTitle("배송 관리");
-        setSize(1000, 600);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLocationRelativeTo(null);
-
-        getContentPane().setBackground(UITheme.COLOR_BACKGROUND);
+    public ShippingPage(MainFrame mainFrame) { // 생성자에서 MainFrame을 받음
+        this.mainFrame = mainFrame;
+        setLayout(new BorderLayout());
+        setBackground(UITheme.COLOR_BACKGROUND);
         originalList = DeliverySystem.getInstance().Dlist;
 
         setupUI();
@@ -92,8 +87,6 @@ public class ShippingPage extends JFrame {
         refreshTable(new ArrayList<>(originalList));
 
         cardLayout.show(cardPanel, "TABLE");
-
-        setVisible(true);
     }
 
     private void setupUI() {
@@ -380,14 +373,12 @@ public class ShippingPage extends JFrame {
 
         // '주문 관리' 페이지로 이동
         btnGoToInquiry.addActionListener(e -> {
-            new InquiryPage(parentFrame);
-            dispose();
+            mainFrame.showCard("INQUIRY");
         });
 
         // 뒤로가기 버튼 리스너
         backButton.addActionListener(e -> {
-            parentFrame.setVisible(true);
-            dispose();
+            mainFrame.showCard("LOGIN");
         });
 
         // 배송 상태 필터링 리스너
@@ -503,3 +494,4 @@ public class ShippingPage extends JFrame {
         }
     }
 }
+

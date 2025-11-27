@@ -12,28 +12,20 @@ import guitool.UITheme;
 /**
  * 게스트 로그인 페이지 (배송 조회 기능)
  */
-public class GuestLogin extends JFrame {
+public class GuestLogin extends JPanel {
 
-    private JFrame parentFrame;
+    private MainFrame mainFrame; // MainFrame 참조
     private JTextField invoiceField;
     private JButton searchButton;
     private JButton hintButton; // [추가] 힌트 버튼
     private JTextArea resultArea;
     private JButton advanceDayButton;
     
+    public GuestLogin(MainFrame mainFrame) { // 생성자에서 MainFrame을 받음
+        this.mainFrame = mainFrame; // MainFrame 저장
 
-
-    public GuestLogin(JFrame parent) { // 생성자에서 이전 창을 받음
-        this.parentFrame = parent; // 이전 창 저장
-
-        setTitle("게스트 로그인 - 배송 조회");
-        setSize(450, 350);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLocationRelativeTo(null);
-
-        Container contentPane = getContentPane();
-        contentPane.setBackground(UITheme.COLOR_BACKGROUND);
-        contentPane.setLayout(new BorderLayout(10, 10));
+        setBackground(UITheme.COLOR_BACKGROUND);
+        setLayout(new BorderLayout(10, 10));
 
         JPanel masterTopPanel = new JPanel(new BorderLayout());
         masterTopPanel.setBackground(UITheme.COLOR_BACKGROUND);
@@ -75,8 +67,8 @@ public class GuestLogin extends JFrame {
         JScrollPane scrollPane = new JScrollPane(resultArea);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
 
-        contentPane.add(masterTopPanel, BorderLayout.NORTH);
-        contentPane.add(scrollPane, BorderLayout.CENTER);
+        add(masterTopPanel, BorderLayout.NORTH);
+        add(scrollPane, BorderLayout.CENTER);
         
         searchButton.addActionListener(new ActionListener() {
             @Override
@@ -108,8 +100,7 @@ public class GuestLogin extends JFrame {
         backButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                parentFrame.setVisible(true);
-                dispose();
+                mainFrame.showCard("LOGIN"); // 로그인 화면으로 전환
             }
         });
 
@@ -127,8 +118,6 @@ public class GuestLogin extends JFrame {
                 }
             }
         });
-
-        setVisible(true);
     }
     
     private void showCheatSheet() {
