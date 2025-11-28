@@ -40,13 +40,7 @@ public final class UITheme {
 
     // --- 공통 스타일링 메서드 ---
 
-    /**
-     * 기본 스타일이 적용된 JButton을 생성합니다.
-     * 마우스 오버/아웃 효과를 포함합니다.
-     *
-     * @param text 버튼 텍스트
-     * @return 스타일이 적용된 JButton
-     */
+    // 기본 스타일이 적용된 JButton 생성
     public static JButton createStyledButton(String text) {
         JButton button = new JButton(text);
         button.setBackground(COLOR_BUTTON);
@@ -70,13 +64,7 @@ public final class UITheme {
         return button;
     }
 
-    /**
-     * GuestLogin 페이지용 버튼 스타일이 적용된 JButton을 생성합니다.
-     *
-     * @param text 버튼 텍스트
-     * @param buttonDim 버튼 크기
-     * @return 스타일이 적용된 JButton
-     */
+    // GuestLogin 페이지용 버튼 스타일이 적용된 JButton을 생성합니다.
     public static JButton createGuestStyledButton(String text, Dimension buttonDim) {
         JButton button = new JButton(text);
         button.setBackground(COLOR_GUEST_BUTTON_LIGHT);
@@ -88,11 +76,7 @@ public final class UITheme {
         return button;
     }
 
-    /**
-     * 표준 스타일이 적용된 JTable을 생성하여 반환합니다.
-     * @param model 테이블에 적용할 데이터 모델
-     * @return 스타일이 적용된 JTable
-     */
+    //표준 스타일이 적용된 JTable을 생성하여 반환합니다.
     public static JTable createStyledTable(DefaultTableModel model) {
         JTable table = new JTable(model) {
             @Override

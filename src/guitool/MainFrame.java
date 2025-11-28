@@ -3,45 +3,41 @@ package guitool;
 import javax.swing.*;
 import java.awt.*;
 
+    // CardLayout을 사용하여 여러 JPanel 기반의 페이지들을 전환하며 관리하는 최상위 컨테이너
 public class MainFrame extends JFrame {
     private CardLayout cardLayout;
     private JPanel cardPanel;
 
+    // MainFrame의 생성자
     public MainFrame() {
-        setTitle("Delivery Management System");
-        setSize(1000, 700);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
+        setTitle("Delivery Management System"); // 제목 설정
+        setSize(1000, 700); // 크기 설정
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // 창 닫기 버튼 클릭 시 애플리케이션 종료
+        setLocationRelativeTo(null); // 화면 중앙에 배치
         setMinimumSize(new Dimension(1300, 600)); // 최소 창 크기 설정
 
-        cardLayout = new CardLayout();
-        cardPanel = new JPanel(cardLayout);
+        cardLayout = new CardLayout(); // CardLayout 객체 생성
+        cardPanel = new JPanel(cardLayout); // CardLayout을 사용할 패널 생성
 
-        // 페이지들을 패널로 생성하여 CardLayout에 추가
+        // --- 애플리케이션의 각 페이지(JPanel)들을 생성 ---
         LoginScreen loginScreen = new LoginScreen(this);
         ShippingPage shippingPage = new ShippingPage(this);
-        GuestLogin guestLogin = new GuestLogin(this);
         InquiryPage inquiryPage = new InquiryPage(this);
 
+        // --- 생성된 페이지 패널들을 CardLayout에 추가 ---
         cardPanel.add(loginScreen, "LOGIN");
         cardPanel.add(shippingPage, "SHIPPING");
-        cardPanel.add(guestLogin, "GUEST");
         cardPanel.add(inquiryPage, "INQUIRY");
 
         add(cardPanel);
 
-        // 초기 화면 설정
-        cardLayout.show(cardPanel, "LOGIN");
+        cardLayout.show(cardPanel, "LOGIN"); // 애플리케이션 시작 시 "LOGIN" 페이지를 초기 화면으로 설정
 
-        setVisible(true);
+        setVisible(true); // 프레임을 화면에 표시
     }
 
     public void showCard(String cardName) {
         cardLayout.show(cardPanel, cardName);
     }
 
-    public static void main(String[] args) {
-        // 데이터 로딩은 GUIApp에서 하므로 여기서는 바로 실행
-        SwingUtilities.invokeLater(MainFrame::new);
-    }
 }
