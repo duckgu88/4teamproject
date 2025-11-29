@@ -82,12 +82,11 @@ public class LoginScreen extends JPanel {
                 String password = new String(pwText.getPassword());
 
                 if (id.equals("manager") && password.equals("qwer1234")) {
-                    // mainFrame이 null인 경우 (예: LoginScreen.main()으로 실행 시) 처리
                     if (mainFrame == null) { 
                         JOptionPane.showMessageDialog(LoginScreen.this, "애플리케이션이 올바르게 초기화되지 않았습니다. GUIApp.main()을 통해 실행해주세요.", "오류", JOptionPane.ERROR_MESSAGE);
                         return;
                     }
-                    mainFrame.showCard("SHIPPING"); // 배송 관리 페이지로 전환
+                    mainFrame.showPage("SHIPPING"); // 배송 관리 페이지로 전환
                 } else {
                     JOptionPane.showMessageDialog(LoginScreen.this, "아이디 또는 비밀번호가 틀렸습니다.", "로그인 실패", JOptionPane.ERROR_MESSAGE);
                 }

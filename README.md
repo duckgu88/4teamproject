@@ -83,7 +83,10 @@
 - `CardLayout`을 사용하는 메인 프레임으로, 앱의 여러 페이지(화면)를 관리하는 컨테이너
 
 ### guitool.LoginScreen
-- 앱 시작 시 표시되는 초기 화면, 관리자 로그인과 비회원(게스트) 조회를 분기 처리
+- 앱 시작 시 표시되는 초기 화면. 관리자 로그인 시 페이지를 전환하고, 비회원(게스트) 조회 시 `GuestLogin` 팝업 다이얼로그를 실행
+
+### guitool.GuestLogin
+- 송장 번호로 배송 상태를 조회하는 게스트용 팝업 다이얼로그. `LoginScreen`에서 실행
 
 ### guitool.ShippingPage
 - 전체 배송 목록을 `JTable`로 표시하는 배송 관리 화면

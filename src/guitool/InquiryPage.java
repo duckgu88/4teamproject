@@ -47,7 +47,7 @@ public class InquiryPage extends JPanel {
         JPanel navButtonsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 0));
         navButtonsPanel.setBackground(UITheme.COLOR_BACKGROUND);
         JButton backButton = UITheme.createStyledButton("뒤로가기");
-        backButton.addActionListener(e -> mainFrame.showCard("LOGIN"));
+        backButton.addActionListener(e -> mainFrame.showPage("LOGIN"));
         navButtonsPanel.add(backButton);
         
         topPanel.add(navButtonsPanel, BorderLayout.WEST);
@@ -74,7 +74,7 @@ public class InquiryPage extends JPanel {
 
         JButton btnGoToShipping = UITheme.createStyledButton("배송 관리");
         btnGoToShipping.addActionListener(e -> {
-            mainFrame.showCard("SHIPPING");
+            mainFrame.showPage("SHIPPING");
         });
         topRightPanel.add(btnGoToShipping);
         

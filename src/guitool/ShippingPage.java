@@ -357,12 +357,12 @@ public class ShippingPage extends JPanel {
 
         // '주문 관리' 페이지로 이동
         btnGoToInquiry.addActionListener(e -> {
-            mainFrame.showCard("INQUIRY");
+            mainFrame.showPage("INQUIRY");
         });
 
         // 뒤로가기 버튼 리스너
         backButton.addActionListener(e -> {
-            mainFrame.showCard("LOGIN");
+            mainFrame.showPage("LOGIN");
         });
 
         // 통합된 배송 상태 필터링 리스너

@@ -1,10 +1,11 @@
 package guitool;
 
+import guitool.Navigation;
 import javax.swing.*;
 import java.awt.*;
 
     // CardLayout을 사용하여 여러 JPanel 기반의 페이지들을 전환하며 관리하는 최상위 컨테이너
-public class MainFrame extends JFrame {
+public class MainFrame extends JFrame implements Navigation {
     private CardLayout cardLayout;
     private JPanel cardPanel;
 
@@ -36,8 +37,9 @@ public class MainFrame extends JFrame {
         setVisible(true); // 프레임을 화면에 표시
     }
 
-    public void showCard(String cardName) {
-        cardLayout.show(cardPanel, cardName);
+    @Override
+    public void showPage(String pageName) {
+        cardLayout.show(cardPanel, pageName);
     }
 
 }
