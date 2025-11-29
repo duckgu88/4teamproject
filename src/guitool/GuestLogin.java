@@ -1,196 +1,439 @@
 package guitool;
 
-import javax.swing.*;
-import main.DeliverySystem;
 import main.DeliveryOrder;
-import java.awt.*;
+import main.DeliverySystem;
+
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+
+import java.io.File;
 import java.util.ArrayList;
-import guitool.UITheme;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
 
 /**
- * 게스트 로그인 페이지를 위한 JDialog 클래스입니다.
- * 사용자에게 송장 번호를 입력받아 배송 정보를 조회하고 표시하는 기능을 제공합니다.
- * 모달 대화상자로 동작하여 호출한 부모 창의 상호작용을 일시적으로 막습니다.
+ * 게스트 로그인 - 배송 조회 화면
+ * (송장번호 / 받는 사람 / 배달기사 / 운송회사 / 요청사항 / 배송 상태)
  */
-public class GuestLogin extends JDialog {
+public class GuestLogin extends JFrame {
 
-    private JTextField invoiceField; // 송장 번호 입력 필드
-    private JButton searchButton; // 조회 버튼
-    private JButton hintButton; // 테스트용 송장 번호 힌트 버튼
-    private JTextArea resultArea; // 배송 조회 결과를 표시하는 텍스트 영역
-    private JButton advanceDayButton; // 날짜를 하루 진행시키는 버튼
-    
-    /**
-     * GuestLogin 대화상자의 생성자입니다.
-     * UI 컴포넌트들을 초기화하고 레이아웃을 설정합니다.
-     * @param parent 이 다이얼로그를 띄운 부모 JFrame (모달 동작을 위해 필요)
-     */
-    public GuestLogin(JFrame parent) { // 생성자에서 부모 JFrame을 받음
-        super(parent, "게스트 로그인 - 배송 조회", true); // Modal JDialog로 설정 (부모 창을 블록함)
-        
-        // --- JDialog 기본 설정 ---
-        setSize(500, 400); // 다이얼로그의 초기 크기 설정 (너비, 높이)
-        setMinimumSize(new Dimension(500, 400)); // 다이얼로그의 최소 크기 설정
-        setLocationRelativeTo(parent); // 다이얼로그를 부모 창의 중앙에 배치
-        setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE); // 창 닫기 버튼 클릭 시 다이얼로그만 닫힘
+    private final JFrame parentFrame;
 
-        // --- 컨텐츠 패널 설정 ---
-        Container contentPane = getContentPane(); // 다이얼로그의 컨텐츠 패널 가져오기
-        contentPane.setBackground(UITheme.COLOR_BACKGROUND); // 배경색 설정
-        contentPane.setLayout(new GridBagLayout()); // GridBagLayout으로 레이아웃 매니저 변경 (유연한 배치)
+    // 색상
+    private static final Color COLOR_BACKGROUND = new Color(239, 222, 207);
+    private static final Color COLOR_BUTTON = new Color(225, 205, 188);
+    private static final Color COLOR_BUTTON_DARK = new Color(200, 180, 160);
+    private static final Color COLOR_TABLE_HEADER = new Color(225, 205, 188);
+    private static final Color COLOR_TABLE_BG = new Color(250, 245, 235);
 
-        GridBagConstraints gbc = new GridBagConstraints(); // GridBagLayout 제약 조건 객체
+    // 폰트 (ShippingPage와 비슷하게)
+    private static final java.awt.Font FONT_BUTTON = new java.awt.Font("맑은 고딕", java.awt.Font.PLAIN, 13);
+    private static final java.awt.Font FONT_LABEL  = new java.awt.Font("맑은 고딕", java.awt.Font.PLAIN, 12);
 
-        // ================= 상단 입력 패널 (송장번호 입력 및 버튼들) =================
-        JPanel masterTopPanel = new JPanel(new BorderLayout());
-        masterTopPanel.setBackground(UITheme.COLOR_BACKGROUND);
-        masterTopPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15)); // 패딩 설정
+    // 테이블 + 날짜 라벨
+    private JTable table;
+    private DefaultTableModel tableModel;
+    private JLabel dateLabel;
+
+    // 마지막 검색 상태 기억용
+    private enum SearchMode { NONE, INVOICE, NAME }
+    private SearchMode lastMode = SearchMode.NONE;
+    private String lastKeyword = null;
+
+    // 파일 기반 매핑
+    // ex) "서울특별시" -> "김도윤"
+    private final Map<String, String> regionToDriver = new HashMap<>();
+    // ex) "강태빈" -> "한진"
+    private final Map<String, String> senderToCompany = new HashMap<>();
+
+    public GuestLogin(JFrame parent) {
+        this.parentFrame = parent;
+
+        setTitle("게스트 로그인 - 배송 조회");
+        setSize(900, 500);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+        getContentPane().setBackground(COLOR_BACKGROUND);
+        getContentPane().setLayout(new BorderLayout(5, 5));
+
+        // 데이터 매핑 먼저 로드
+        loadDriverMap();
+        loadSenderCompanyMap();
+
+        initNorth();
+        initCenter();
+        initSouth();
+
+        // 시작할 때는 아무 데이터도 안 보이게
+        loadTable(new ArrayList<DeliveryOrder>());
+
+        setVisible(true);
+    }
+
+    // =====================================
+    // 상단 영역 (뒤로가기 + 검색 카테고리)
+    // =====================================
+    private void initNorth() {
+        JPanel northPanel = new JPanel(new BorderLayout());
+        northPanel.setBackground(COLOR_BACKGROUND);
+        northPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
         // 뒤로가기 버튼
-        JButton backButton = UITheme.createGuestStyledButton("뒤로가기", new Dimension(80, 25));
-        masterTopPanel.add(backButton, BorderLayout.WEST);
-
-        JPanel inputPanel = new JPanel(); // 송장번호 입력 필드와 검색 버튼들을 담는 패널
-        inputPanel.setBackground(UITheme.COLOR_BACKGROUND);
-        inputPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 15, 0)); // 가운데 정렬, 가로 간격 15px
-
-        JLabel instructionLabel = new JLabel("송장번호:");
-        instructionLabel.setForeground(UITheme.COLOR_TEXT);
-        inputPanel.add(instructionLabel);
-
-        invoiceField = new JTextField(8); // 송장번호 입력 필드 (8칸 너비)
-        inputPanel.add(invoiceField);
-
-        searchButton = UITheme.createGuestStyledButton("조회", new Dimension(60, 25)); // 조회 버튼
-        inputPanel.add(searchButton);
-
-        hintButton = UITheme.createGuestStyledButton("?", new Dimension(25, 25)); // 힌트 버튼
-        hintButton.setToolTipText("테스트용 송장번호 확인");
-        inputPanel.add(hintButton);
-        
-        masterTopPanel.add(inputPanel, BorderLayout.CENTER); // 입력 패널을 상단 패널의 중앙에 배치
-
-        // 날짜 하루 진행 버튼
-        advanceDayButton = UITheme.createGuestStyledButton("하루 지남", new Dimension(80, 25));
-        masterTopPanel.add(advanceDayButton, BorderLayout.EAST); // 날짜 진행 버튼을 상단 패널의 동쪽에 배치
-        
-        // GridBagLayout에 상단 패널 추가 (맨 위 행, 가로로 늘어남)
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.weightx = 1.0; // 가로 방향으로 추가 공간을 모두 차지
-        gbc.fill = GridBagConstraints.HORIZONTAL; // 가로로 늘어나게 함
-        contentPane.add(masterTopPanel, gbc);
-
-        // ================= 중앙 결과 패널 (블록 형태의 출력 영역) =================
-        JPanel outputPanel = new JPanel(new BorderLayout());
-        outputPanel.setPreferredSize(new Dimension(400, 300)); // 출력 패널의 선호 크기 설정
-        outputPanel.setMinimumSize(new Dimension(400, 300)); // 출력 패널의 최소 크기 설정 (축소 방지)
-        outputPanel.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY)); // 블록처럼 보이도록 테두리 설정
-
-        resultArea = new JTextArea(); // 배송 조회 결과가 표시될 텍스트 영역
-        resultArea.setEditable(false); // 수정 불가능하도록 설정
-        resultArea.setBackground(UITheme.COLOR_TEXTAREA_BACKGROUND); // 배경색 설정
-        resultArea.setFont(new Font("Monospaced", Font.PLAIN, 14)); // 모노스페이스 폰트 (정렬 보기 좋게)
-        resultArea.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20)); // 내부 패딩 설정
-
-        JScrollPane scrollPane = new JScrollPane(resultArea); // 텍스트 영역에 스크롤 기능 추가
-        scrollPane.setBorder(BorderFactory.createEmptyBorder()); // 스크롤 패널의 기본 테두리 제거
-        outputPanel.add(scrollPane, BorderLayout.CENTER); // 스크롤 패널을 출력 패널의 중앙에 배치
-
-        // GridBagLayout에 중앙 결과 패널 추가 (두 번째 행, 중앙 정렬)
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        gbc.weighty = 1.0; // 남은 세로 공간을 이 컴포넌트가 차지 (상단 패널을 위로 밀어 올림)
-        gbc.fill = GridBagConstraints.NONE; // 컴포넌트 크기 고정 (선호 크기 유지)
-        gbc.anchor = GridBagConstraints.CENTER; // 할당된 공간 내에서 중앙에 배치
-        contentPane.add(outputPanel, gbc);
-        
-        // ================= 이벤트 리스너 설정 =================
-        // 조회 버튼 액션: 송장 번호를 이용하여 배송 정보 조회 후 결과 표시
-        searchButton.addActionListener(e -> {
-            String invoiceNumber = invoiceField.getText();
-            if (invoiceNumber == null || invoiceNumber.trim().isEmpty()) {
-                resultArea.setText("송장번호를 입력해주세요.");
-                return;
+        JButton backButton = new JButton("뒤로가기");
+        backButton.setBackground(COLOR_BUTTON_DARK);
+        backButton.setForeground(Color.BLACK);
+        backButton.setFocusPainted(false);
+        backButton.setFont(FONT_BUTTON);
+        backButton.setPreferredSize(new Dimension(110, 32));
+        backButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (parentFrame != null) parentFrame.setVisible(true);
+                dispose();
             }
+        });
+        northPanel.add(backButton, BorderLayout.WEST);
 
-            DeliveryOrder order = DeliverySystem.getInstance().findOrder(invoiceNumber);
+        // 검색 카테고리 버튼들
+        JPanel categoryPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        categoryPanel.setBackground(COLOR_BACKGROUND);
 
-            if (order != null) {
-                resultArea.setText(formatOrderInfo(order)); // 조회된 정보 포맷팅 후 표시
-            } else {
-                resultArea.setText("해당 송장번호의 배송 정보가 없습니다.\n송장번호를 다시 확인해주세요.");
+        JButton btnSearchByInvoice = new JButton("송장번호로 검색");
+        styleCategoryButton(btnSearchByInvoice);
+        btnSearchByInvoice.setPreferredSize(new Dimension(160, 32)); // 글자 다 보이게
+        btnSearchByInvoice.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                onSearchByInvoice();
             }
         });
 
-        // 힌트 버튼 액션: 테스트용 송장 번호 목록을 팝업으로 표시
-        hintButton.addActionListener(e -> showCheatSheet());
-
-        // 뒤로가기 버튼 액션: 현재 다이얼로그를 닫음 (부모 창인 로그인 화면으로 돌아감)
-        backButton.addActionListener(e -> dispose()); 
-
-        // 날짜 하루 진행 버튼 액션: 시스템 날짜를 하루 진행시키고 배송 상태 업데이트
-        advanceDayButton.addActionListener(e -> {
-            DeliverySystem.advanceDate(); // 날짜 하루 진행
-            DeliverySystem.getInstance().updateDeliveryStatuses(); // 배송 상태 업데이트
-            
-            // 송장 번호가 입력되어 있으면 자동으로 재조회
-            if (!invoiceField.getText().trim().isEmpty()) {
-                searchButton.doClick(); 
-            } else {
-                resultArea.setText("날짜가 하루 지났습니다. 송장번호를 입력하여 다시 조회해주세요.");
+        JButton btnSearchByName = new JButton("이름으로 검색");
+        styleCategoryButton(btnSearchByName);
+        btnSearchByName.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                onSearchByName();
             }
         });
+
+        categoryPanel.add(btnSearchByInvoice);
+        categoryPanel.add(btnSearchByName);
+
+        northPanel.add(categoryPanel, BorderLayout.CENTER);
+
+        getContentPane().add(northPanel, BorderLayout.NORTH);
     }
-    
-    /**
-     * 테스트 목적으로 유효한 송장 번호 목록을 팝업 메시지로 표시합니다.
-     */
-    private void showCheatSheet() {
-        ArrayList<DeliveryOrder> allOrders = DeliverySystem.getInstance().Dlist;
-        
-        if (allOrders.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "생성된 주문 데이터가 없습니다.");
+
+    private void styleCategoryButton(JButton btn) {
+        btn.setBackground(COLOR_BUTTON);
+        btn.setForeground(Color.BLACK);
+        btn.setFocusPainted(false);
+        btn.setFont(FONT_BUTTON);
+        btn.setPreferredSize(new Dimension(130, 32));
+    }
+
+    // =====================================
+    // 가운데 리스트 영역 (JTable)
+    // =====================================
+    private void initCenter() {
+        // 컬럼: 송장번호, 받는 사람, 배달기사, 운송회사, 요청사항, 배송 상태
+        String[] columns = {
+                "송장번호",
+                "받는 사람",
+                "배달기사",
+                "운송회사",
+                "요청사항",
+                "배송 상태"
+        };
+
+        tableModel = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false; // 게스트는 수정 불가
+            }
+        };
+
+        table = new JTable(tableModel);
+        table.setFillsViewportHeight(true);
+        table.setRowHeight(25);
+        table.setBackground(COLOR_TABLE_BG);
+        table.getTableHeader().setBackground(COLOR_TABLE_HEADER);
+        table.getTableHeader().setReorderingAllowed(false);
+
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.getViewport().setBackground(COLOR_TABLE_BG);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+
+        getContentPane().add(scrollPane, BorderLayout.CENTER);
+    }
+
+    // =====================================
+    // 하단 영역 (현재 날짜 + 날짜 갱신)
+    // =====================================
+    private void initSouth() {
+        JPanel southPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 5));
+        southPanel.setBackground(COLOR_BACKGROUND);
+        southPanel.setBorder(BorderFactory.createEmptyBorder(5, 10, 10, 10));
+
+        dateLabel = new JLabel();
+        dateLabel.setForeground(Color.BLACK);
+        dateLabel.setFont(FONT_LABEL);
+        updateDateLabel();
+
+        JButton btnUpdateDate = new JButton("날짜 갱신");
+        btnUpdateDate.setBackground(COLOR_BUTTON);
+        btnUpdateDate.setForeground(Color.BLACK);
+        btnUpdateDate.setFocusPainted(false);
+        btnUpdateDate.setFont(FONT_BUTTON);
+        btnUpdateDate.setPreferredSize(new Dimension(100, 28));
+        btnUpdateDate.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                onUpdateDate();
+            }
+        });
+
+        southPanel.add(dateLabel);
+        southPanel.add(btnUpdateDate);
+
+        getContentPane().add(southPanel, BorderLayout.SOUTH);
+    }
+
+    private void updateDateLabel() {
+        // DeliverySystem에 getCurrentDateString()이 없으면 아래 한 줄을
+        // String dateStr = DeliverySystem.getCurrentDate().toString();
+        // 로 바꿔 써도 됨.
+        String dateStr = DeliverySystem.getCurrentDate().toString();
+        dateLabel.setText("현재 날짜: " + dateStr);
+    }
+
+    // =====================================
+    // 파일 → 매핑 로딩
+    // =====================================
+    // drivers.txt : "서울특별시 김도윤" 형식
+    private void loadDriverMap() {
+        regionToDriver.clear();
+        try (Scanner sc = new Scanner(new File("drivers.txt"), "UTF-8")) {
+            while (sc.hasNextLine()) {
+                String line = sc.nextLine().trim();
+                if (line.isEmpty()) continue;
+
+                String[] parts = line.split("\\s+");
+                if (parts.length >= 2) {
+                    String region = parts[0];   // 시/도
+                    String driver = parts[1];   // 기사 이름
+                    regionToDriver.put(region, driver);
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("drivers.txt 로부터 기사 정보를 읽는 중 오류: " + e.getMessage());
+        }
+    }
+
+    // senders.txt : "강태빈 010-... 경기도 수원시 한진 15kg 생필품" 형식
+    private void loadSenderCompanyMap() {
+        senderToCompany.clear();
+        try (Scanner sc = new Scanner(new File("senders.txt"), "UTF-8")) {
+            while (sc.hasNextLine()) {
+                String line = sc.nextLine().trim();
+                if (line.isEmpty()) continue;
+
+                String[] parts = line.split("\\s+");
+                // 0:이름 1:전화 2:경기도 3:수원시 4:한진 ...
+                if (parts.length >= 5) {
+                    String name = parts[0];
+                    String company = parts[4];  // 운송회사
+                    senderToCompany.put(name, company);
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("senders.txt 로부터 운송회사 정보를 읽는 중 오류: " + e.getMessage());
+        }
+    }
+
+    // =====================================
+    // 검색 이벤트 (송장 / 이름)
+    // =====================================
+    private void onSearchByInvoice() {
+        String keyword = JOptionPane.showInputDialog(
+                this,
+                "조회할 송장번호를 입력하세요.",
+                "송장번호로 검색",
+                JOptionPane.PLAIN_MESSAGE
+        );
+        if (keyword == null) return;
+
+        keyword = keyword.trim();
+        if (keyword.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "송장번호를 입력해주세요.");
             return;
         }
 
-        StringBuilder sb = new StringBuilder();
-        sb.append("=== [테스트용] 유효한 송장번호 목록 ===\n\n");
-        
-        int count = 0;
-        for (DeliveryOrder order : allOrders) {
-            sb.append("송장: ").append(order.getInvoiceNumber())
-              .append("  (수령인: ").append(order.getReceiver().getName()).append(")\n");
-            count++;
-            if (count >= 5) break; // 최대 5개까지만 표시
+        int keyNum;
+        try {
+            keyNum = Integer.parseInt(keyword);
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "송장번호는 숫자만 입력해주세요.");
+            return;
         }
-        sb.append("\n(위 번호 중 하나를 입력하세요)");
 
-        JOptionPane.showMessageDialog(this, sb.toString(), "테스트 힌트", JOptionPane.INFORMATION_MESSAGE);
-    }
-    
-    /**
-     * DeliveryOrder 객체의 정보를 보기 좋게 문자열로 포맷팅합니다.
-     * @param order 포맷팅할 DeliveryOrder 객체
-     * @return 포맷팅된 배송 정보 문자열
-     */
-    private String formatOrderInfo(DeliveryOrder order) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("--- 배송 조회 결과 ---\n\n");
-        sb.append("✅ 송장번호: ").append(order.getInvoiceNumber()).append("\n");
-        sb.append("📦 상품명:   ").append(order.getSender().getItem()).append("\n");
-        sb.append("👤 보내는 분: ").append(order.getSender().getName()).append("\n");
-        sb.append("👤 받는 분:   ").append(order.getReceiver().getName()).append("\n");
-        sb.append("🏠 배송 주소: ").append(order.getReceiver().getAddress()).append("\n");
-        sb.append("🚚 배송 상태: ").append(order.getReceiver().getFormattedDeliveryStatus()).append("\n");
-        
-        String req = order.getReceiver().getRequest();
-        if(req != null && !req.isEmpty()) {
-             sb.append("📢 요청사항: ").append(req).append("\n");
+        ArrayList<DeliveryOrder> all = DeliverySystem.getInstance().Dlist;
+        List<DeliveryOrder> filtered = new ArrayList<>();
+
+        for (DeliveryOrder order : all) {
+            if (order.getInvoiceNumber() == keyNum) {
+                filtered.add(order);
+            }
         }
-        
-        return sb.toString();
+
+        if (filtered.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "해당 송장번호의 배송 데이터가 없습니다.");
+        }
+
+        lastMode = SearchMode.INVOICE;
+        lastKeyword = keyword;
+
+        loadTable(filtered);
+    }
+
+    private void onSearchByName() {
+        String keyword = JOptionPane.showInputDialog(
+                this,
+                "조회할 받는 사람 이름을 입력하세요.",
+                "이름으로 검색",
+                JOptionPane.PLAIN_MESSAGE
+        );
+        if (keyword == null) return;
+
+        keyword = keyword.trim();
+        if (keyword.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "이름을 입력해주세요.");
+            return;
+        }
+
+        ArrayList<DeliveryOrder> all = DeliverySystem.getInstance().Dlist;
+        List<DeliveryOrder> filtered = new ArrayList<>();
+
+        for (DeliveryOrder order : all) {
+            if (order.getReceiver() != null &&
+                    order.getReceiver().getName() != null &&
+                    order.getReceiver().getName().contains(keyword)) {
+                filtered.add(order);
+            }
+        }
+
+        if (filtered.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "해당 이름의 배송 데이터가 없습니다.");
+        }
+
+        lastMode = SearchMode.NAME;
+        lastKeyword = keyword;
+
+        loadTable(filtered);
+    }
+
+    // =====================================
+    // 날짜 갱신
+    // =====================================
+    private void onUpdateDate() {
+        DeliverySystem.advanceDate();
+        DeliverySystem.getInstance().updateDeliveryStatuses();
+        updateDateLabel();
+
+        List<DeliveryOrder> listToShow = new ArrayList<>();
+
+        if (lastMode == SearchMode.INVOICE && lastKeyword != null) {
+            try {
+                int keyNum = Integer.parseInt(lastKeyword);
+                for (DeliveryOrder order : DeliverySystem.getInstance().Dlist) {
+                    if (order.getInvoiceNumber() == keyNum) {
+                        listToShow.add(order);
+                    }
+                }
+            } catch (NumberFormatException ignored) {}
+        } else if (lastMode == SearchMode.NAME && lastKeyword != null) {
+            for (DeliveryOrder order : DeliverySystem.getInstance().Dlist) {
+                if (order.getReceiver() != null &&
+                        order.getReceiver().getName() != null &&
+                        order.getReceiver().getName().contains(lastKeyword)) {
+                    listToShow.add(order);
+                }
+            }
+        }
+
+        loadTable(listToShow);
+
+        String msg = "현재 날짜: " + DeliverySystem.getCurrentDate().toString()
+                + "\n배송 상태가 업데이트되었습니다.";
+        JOptionPane.showMessageDialog(
+                this,
+                msg,
+                "메시지",
+                JOptionPane.INFORMATION_MESSAGE
+        );
+    }
+
+    // =====================================
+    // 테이블 채우기
+    // =====================================
+    private void loadTable(List<DeliveryOrder> list) {
+        tableModel.setRowCount(0);
+        if (list == null) return;
+
+        for (DeliveryOrder order : list) {
+            String invoice = String.valueOf(order.getInvoiceNumber());
+
+            String receiverName = "";
+            String address = "";
+            String request = "";
+            String status = "";
+
+            if (order.getReceiver() != null) {
+                receiverName = order.getReceiver().getName();
+                address = order.getReceiver().getAddress();
+                request = order.getReceiver().getRequest();
+                status = order.getReceiver().getFormattedDeliveryStatus();
+            }
+
+            // 배달기사: 주소의 첫 단어(시/도) → drivers.txt 매핑
+            String driverName = "";
+            if (address != null && !address.isEmpty()) {
+                String[] addrParts = address.split("\\s+");
+                if (addrParts.length > 0) {
+                    String regionKey = addrParts[0]; // 예: 인천광역시, 부산광역시...
+                    String driver = regionToDriver.get(regionKey);
+                    if (driver != null) driverName = driver;
+                }
+            }
+
+            // 운송회사: 보내는 사람 이름 → senders.txt 매핑
+            String companyName = "";
+            if (order.getSender() != null) {
+                String senderName = order.getSender().getName();
+                String comp = senderToCompany.get(senderName);
+                if (comp != null) companyName = comp;
+            }
+
+            tableModel.addRow(new Object[]{
+                    invoice,
+                    receiverName,
+                    driverName,
+                    companyName,
+                    request,
+                    status
+            });
+        }
     }
 }

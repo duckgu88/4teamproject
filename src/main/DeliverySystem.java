@@ -102,7 +102,7 @@ public class DeliverySystem {
             for (DeliveryOrder order : Dlist) {
                 // [수정] 'order.invoiceNumber' 대신 'order.getInvoiceNumber()' Getter 사용
                 if (order.getInvoiceNumber() == invoiceNumber) {
-                    return order; // 찾았다!
+                    return order; // 찾은 경우
                 }
             }
         } catch (NumberFormatException e) {
